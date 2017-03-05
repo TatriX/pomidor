@@ -243,8 +243,7 @@ TIME may be nil."
       (with-current-buffer buffer
         (read-only-mode -1)
         (erase-buffer)
-        (insert (propertize (pomidor--format-time (current-time))
-                            'font-lock-face 'pomidor-time-face)
+        (insert (pomidor--with-face (pomidor--format-time (current-time)) 'pomidor-time-face)
                 "\n")
         (cl-loop
          for i from 1
@@ -273,8 +272,9 @@ TIME may be nil."
 
 (defun pomidor--cancel-timer ()
   "Cancel pomidor timer."
-  (when (timerp pomidor-timer)
-    (cancel-timer pomidor-timer)))
+  (when (and (equal (current-buffer) (pomidor--get-buffer-create))
+             (timerp pomidor-timer))
+             (cancel-timer pomidor-timer)))
 
 ;;; Public
 
@@ -343,7 +343,7 @@ TIME may be nil."
 
 ;;;###autoload
 (defun pomidor ()
-  "A simple and beautiful pomodoro technique timer."
+  "A simple and cool pomodoro technique timer."
   (interactive)
   (switch-to-buffer (pomidor--get-buffer-create))
   (unless (eq major-mode 'pomidor-mode)
