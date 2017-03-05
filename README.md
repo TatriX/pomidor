@@ -63,11 +63,12 @@ Example using `notify-send`:
 ```lisp
 (defun my-pomidor-update-hook ()
   "Pomidor update hook."
-  (when-let (overwork (pomidor-overwork-duration))
+  (when (pomidor-overwork-p)
     (start-process "notify-send"
                    nil
                    "notify-send"
-                   (format "pomidor: make a pause; overwork: [%s]" (format-time-string "%H:%M:%S" overwork t))
+                   (format "pomidor: make a pause; overwork: [%s]"
+                           (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
                    "-t" "3000"
                    "-i" "/usr/share/icons/hicolor/16x16/apps/emacs.png")))
 
