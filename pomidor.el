@@ -168,6 +168,12 @@
     (when (> (time-to-seconds overwork) 0)
       overwork)))
 
+(defun pomidor--overwork-p ()
+  "Return t if current state is overwork."
+  (let* ((state (pomidor--current-state))
+         (overwork (pomidor--overwork-duration state)))
+    (and overwork (null (pomidor--break state)))))
+
 (defun pomidor--total-duration (state)
   "Return total time for STATE."
   (time-subtract (pomidor--ended state) (pomidor--started state)))
@@ -222,12 +228,11 @@ TIME may be nil."
   "Update pomidor state."
   (let* ((state (pomidor--current-state))
          (total (pomidor--total-duration state))
-         (overwork (pomidor--overwork-duration state))
          (ellapsed (round (time-to-seconds total))))
     (pomidor--tick-tack ellapsed)
     (when (zerop (mod ellapsed pomidor-update-interval))
       (run-hooks 'pomidor-update-hook)
-      (when overwork
+      (when (pomidor--overwork-p)
         (pomidor-play-sound-file-async pomidor-sound-overwork))))
   (pomidor--render))
 
