@@ -1,37 +1,52 @@
-Pomidor is a simple and cool [[http://www.pomodorotechnique.com/][pomodoro technique]] timer.
+Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.com/) timer.
+
+## Installation
+
+Clone the repo:
+```sh
+cd ~/.emacs.d
+git clone https://github.com/TatriX/pomidor
+```
+Add to your .emacs:
+```lisp
+(add-to-list 'load-path "~/.emacs.d/pomidor/")
+(require 'pomidor)
+
+```
 
 ## Usage
 
-  Bind it here to a key or run  /F12/ with the following command:
+Bind it to a key with the following command:
 
 ```lisp
   (global-set-key (kbd "<f12>") #'pomidor)
 ```
+Or run simply `M-x pomidor`
 
-  When you start pomidor, you automatically begin your first
-  pomodoro. There is nothing to do at this point, except to work. You
-  can, of course, restart the pomodoro if you get distracted, or even
-  the whole series, but the program takes care of itself until the
-  25-minute mark is reached. At this point, the overwork period will
-  start until you press `Space` to start break period.
+When you start pomidor, you automatically begin your first
+pomodoro. There is nothing to do at this point, except to work. You
+can, of course, restart the pomodoro if you get distracted, or even
+the whole series, but the program takes care of itself until the
+25-minute mark is reached. At this point, the overwork period will
+start until you press `Space` to start break period.
 
-  Then you can press `Space` (ask for confirmation) or `Enter` to start a new period.
+Then you can press `Space` (ask for confirmation) or `Enter` to start a new period.
 
-  This cycle goes on forever.
+This cycle goes on forever.
 
 ## Keybindings
 
-| Key     | Description          |
-|---------+----------------------|
-| <Enter> | Start new pomodoro.  |
-| <Space> | Start a break.       |
-| R       | Resets the timer.    |
-| q       | Quit pomidor buffer. |
-| Q       | Turns off pomidor.   |
+| Key   | Description          |
+|-------|----------------------|
+| Enter | Start new pomodoro.  |
+| Space | Start a break.       |
+| R     | Resets the timer.    |
+| q     | Quit pomidor buffer. |
+| Q     | Turns off pomidor.   |
 
 ## Customization
 
-You can customize pomidor with `M-x customize-group RET pomidor=`.
+You can customize pomidor with `M-x customize-group RET pomidor`.
 
 To disable sounds add to your .emacs:
 ```lisp
@@ -41,9 +56,9 @@ To disable sounds add to your .emacs:
 ```
 
 ## Notification
-You can set =pomidor-update-hook= to show desired notification.
+You can set `pomidor-update-hook` to show desired notification.
 
-Example using =notify-send=:
+Example using `notify-send`:
 
 ```lisp
 (defun my-pomidor-update-hook ()
@@ -52,7 +67,7 @@ Example using =notify-send=:
     (start-process "notify-send"
                    nil
                    "notify-send"
-                   (format "pomidor: make a pause; overwork: [%s]" (format-time-string "%H:%M:%S" overwork))
+                   (format "pomidor: make a pause; overwork: [%s]" (format-time-string "%H:%M:%S" overwork t))
                    "-t" "3000"
                    "-i" "/usr/share/icons/hicolor/16x16/apps/emacs.png")))
 
@@ -62,3 +77,4 @@ Example using =notify-send=:
 
 ## Acknowledgments
 Inspired by https://github.com/konr/tomatinho
+Sounds from https://www.freesound.org/
