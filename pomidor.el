@@ -1,8 +1,10 @@
-;;; pomidel.el --- Simple and cool pomodoro timer
+;;; pomidor.el --- Simple and cool pomodoro timer
 
 ;; Author: TatriX <tatrics@gmail.com>
-;; Keywords: time, productivity, pomodoro technique
+;; URL: https://github.com/TatriX/pomidor
+;; Keywords: tools, time, productivity, pomodoro technique
 ;; Version: 0.1
+;; Package-Requires: ((emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -330,7 +332,7 @@ TIME may be nil."
   "Major mode for Pomidor.
 
 \\{pomidor-mode-map}"
-  (setq-local pomidor-timer (run-at-time nil 1 #'pomidor--update))
+  (setq pomidor-timer (run-at-time nil 1 #'pomidor--update))
   (add-hook 'kill-buffer-hook #'pomidor--cancel-timer)
   (pomidor--reset))
 
