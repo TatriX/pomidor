@@ -57,24 +57,32 @@ To disable sounds add to your .emacs:
 ```
 
 ## Notification
-You can set `pomidor-update-hook` to show desired notification.
+By default pomidor will show you an overwork notification once per minute.
+See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
 
-Example using `notify-send`:
 
+To change notification you can set `pomidor-alert` variable:
 ```lisp
-(defun my-pomidor-update-hook ()
-  "Pomidor update hook."
-  (when (pomidor-overwork-p)
-    (start-process "notify-send"
-                   nil
-                   "notify-send"
-                   (format "pomidor: make a pause; overwork: [%s]"
-                           (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
-                   "-t" "3000"
-                   "-i" "/usr/share/icons/hicolor/16x16/apps/emacs.png")))
+(setq pomidor-alert (lambda () (alert "OMG!11")))
 
-(add-hook 'pomidor-update-hook #'my-pomidor-update-hook)
+;; default:
+(defun pomidor-default-alert ()
+  "Default pomidor alert."
+  (when (or t (pomidor-overwork-p))
+    (alert (format "Take a break!\nOverwork: [%s]"
+                   (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
+           :severity 'normal
+           :icon pomidor-icon
+           :title "Pomidor"
+           :category 'pomidor)))
+```
 
+Also can set `pomidor-update-hook` to do some work on every update.
+
+You can adjust update interval setting `pomidor-update-inteval` variable
+```lisp
+(setq pomidor-update-interval 30) ; seconds
+```
 ```
 
 ## Acknowledgments

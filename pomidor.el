@@ -4,7 +4,7 @@
 ;; URL: https://github.com/TatriX/pomidor
 ;; Keywords: tools, time, applications, pomodoro technique
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "24.3") (alert "1.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -65,8 +65,24 @@
 (defvar pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
   "Tack sound during an overwork.")
 
-(defvar pomidor-update-hook nil)
+;; libnotify for some reason can't display svg
+(defvar pomidor-icon (concat data-directory "images/icons/hicolor/16x16/apps/emacs.png")
+  "Default pomidor icon.")
 
+(defun pomidor-default-alert ()
+  "Default pomidor alert."
+  (when (or t (pomidor-overwork-p))
+    (alert (format "Take a break!\nOverwork: [%s]"
+                   (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
+           :severity 'normal
+           :icon pomidor-icon
+           :title "Pomidor"
+           :category 'pomidor)))
+
+(defvar pomidor-alert #'pomidor-default-alert
+  "Pomidor alert function.")
+
+(defvar pomidor-update-hook nil)
 
 ;;; Faces
 (defface pomidor-time-face
@@ -230,6 +246,8 @@ TIME may be nil."
          (ellapsed (round (time-to-seconds total))))
     (pomidor--tick-tack ellapsed)
     (when (zerop (mod ellapsed pomidor-update-interval))
+      (when (functionp pomidor-alert)
+        (funcall pomidor-alert))
       (run-hooks 'pomidor-update-hook)
       (when (pomidor-overwork-p)
         (pomidor-play-sound-file-async pomidor-sound-overwork))))
