@@ -60,6 +60,13 @@ To disable sounds add to your .emacs:
 By default pomidor will show you an overwork notification once per minute.
 See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
 
+You can change default notification style globally:
+```lisp
+(setq alert-default-style 'libnotify)
+;; or 'growl (see alert docs)
+```
+
+
 
 To change notification you can set `pomidor-alert` variable (defaults to `pomidor-default-alert`):
 ```lisp
@@ -75,4 +82,5 @@ You can adjust update interval by setting `pomidor-update-inteval` variable
 
 ## Acknowledgments
 Inspired by https://github.com/konr/tomatinho
+
 Sounds from https://www.freesound.org/

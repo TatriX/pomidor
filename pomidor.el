@@ -86,8 +86,13 @@
 
 ;;; Faces
 (defface pomidor-time-face
-  '(( t ( :family "DejaVu Sans" :height 6.0)))
-  "pomidor face for Clock"
+  '(( t (:height 5.0)))
+  "pomidor face for time"
+  :group 'pomidor)
+
+(defface pomidor-timer-face
+  '(( t (:height 4.0)))
+  "pomidor face for timer"
   :group 'pomidor)
 
 (defface pomidor-work-face
@@ -198,6 +203,26 @@
   (let ((break (pomidor--break state)))
     (and break (time-subtract (pomidor--ended state) break))))
 
+(defun pomidor--format-header (time face)
+  "Return formated reader for TIME with FACE."
+  (concat (pomidor--with-face (concat (pomidor--format-time (current-time))
+                                      " — ")
+                              'pomidor-time-face)
+          (propertize (pomidor--format-duration time)
+                      'face `(:inherit (,face pomidor-timer-face)))))
+
+(defun pomidor--header ()
+  "Return header."
+  (let* ((state (pomidor--current-state))
+         (break (pomidor--break-duration state))
+         (overwork (pomidor--overwork-duration state))
+         (work (pomidor--work-duration state)))
+    (cond
+     (break (pomidor--format-header break 'pomidor-break-face))
+     (overwork (pomidor--format-header overwork 'pomidor-overwork-face))
+     (work (pomidor--format-header work 'pomidor-work-face)))))
+
+
 (defun pomidor--format-time (time)
   "Format TIME as of `pomidor-time-format'."
   (format-time-string pomidor-time-format time))
@@ -260,7 +285,7 @@ TIME may be nil."
       (with-current-buffer buffer
         (read-only-mode -1)
         (erase-buffer)
-        (insert (pomidor--with-face (pomidor--format-time (current-time)) 'pomidor-time-face)
+        (insert (pomidor--header)
                 "\n")
         (cl-loop
          for i from 1
@@ -319,7 +344,6 @@ TIME may be nil."
 (defun pomidor-total-duration ()
   "Return current total duration."
   (pomidor--total-duration (pomidor--current-state)))
-
 
 (defun pomidor-quit ()
   "Turn off Pomidor."
