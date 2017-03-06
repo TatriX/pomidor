@@ -71,7 +71,7 @@
 
 (defun pomidor-default-alert ()
   "Default pomidor alert."
-  (when (or t (pomidor-overwork-p))
+  (when (pomidor-overwork-p)
     (alert (format "Take a break!\nOverwork: [%s]"
                    (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
            :severity 'normal

@@ -61,20 +61,9 @@ By default pomidor will show you an overwork notification once per minute.
 See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
 
 
-To change notification you can set `pomidor-alert` variable:
+To change notification you can set `pomidor-alert` variable (default to `pomidor-default-alert`):
 ```lisp
 (setq pomidor-alert (lambda () (alert "OMG!11")))
-
-;; default:
-(defun pomidor-default-alert ()
-  "Default pomidor alert."
-  (when (or t (pomidor-overwork-p))
-    (alert (format "Take a break!\nOverwork: [%s]"
-                   (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
-           :severity 'normal
-           :icon pomidor-icon
-           :title "Pomidor"
-           :category 'pomidor)))
 ```
 
 Also can set `pomidor-update-hook` to do some work on every update.
