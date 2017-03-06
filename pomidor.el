@@ -230,7 +230,7 @@
 (defun pomidor--format-duration (time)
   "Format TIME as of `pomidor-duration-format'.
 TIME may be nil."
-  (format-time-string pomidor-time-format (or time 0) t))
+  (format-time-string pomidor-time-format (or time (time-to-seconds 0)) t))
 
 (defun pomidor--window-width ()
   "Return pomidor buffer width in chars."
