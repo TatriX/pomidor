@@ -2,7 +2,7 @@
 
 ;; Author: TatriX <tatrics@gmail.com>
 ;; URL: https://github.com/TatriX/pomidor
-;; Keywords: tools, time, productivity, pomodoro technique
+;; Keywords: tools, time, applications, pomodoro technique
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -27,7 +27,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-
 
 ;;; Customs
 (defgroup pomidor nil
@@ -54,7 +53,7 @@
 (defvar pomidor-duration-format "%H:%M:%S"
   "Time format for duration intervals.")
 
-(defvar pomidor-dir (file-name-directory (or load-file-name buffer-file-name))
+(defconst pomidor-dir (file-name-directory (or load-file-name buffer-file-name))
   "Pomidor directory in which sounds  store.")
 
 (defvar pomidor-sound-tick (expand-file-name (concat pomidor-dir "tick.wav"))
@@ -71,27 +70,27 @@
 
 ;;; Faces
 (defface pomidor-time-face
-  '(( t ( :family "DejaVu Sans" :height 6.0 :width semi-condensed)))
+  '(( t ( :family "DejaVu Sans" :height 6.0)))
   "pomidor face for Clock"
   :group 'pomidor)
 
 (defface pomidor-work-face
-  '((t (:foreground "#00cc00")))
+  '((t (:inherit 'success)))
   "pomidor face for work"
   :group 'pomidor)
 
 (defface pomidor-overwork-face
-  '((t (:foreground "#cc7700")))
+  '((t (:inherit 'warning)))
   "pomidor face for overwork"
   :group 'pomidor)
 
 (defface pomidor-break-face
-  '((t (:foreground "#00cccc")))
+  '((t (:inherit 'font-lock-keyword-face)))
   "pomidor face for break"
   :group 'pomidor)
 
 (defface pomidor-skip-face
-  '(( t (:foreground "#666666")))
+  '(( t (:inherit 'font-lock-comment-face)))
   "pomidor face for skip"
   :group 'pomidor)
 
@@ -272,9 +271,8 @@ TIME may be nil."
 
 (defun pomidor--cancel-timer ()
   "Cancel pomidor timer."
-  (when (and (equal (current-buffer) (pomidor--get-buffer-create))
-             (timerp pomidor-timer))
-             (cancel-timer pomidor-timer)))
+  (when (timerp pomidor-timer)
+    (cancel-timer pomidor-timer)))
 
 ;;; Public
 
@@ -338,7 +336,7 @@ TIME may be nil."
 
 \\{pomidor-mode-map}"
   (setq pomidor-timer (run-at-time nil 1 #'pomidor--update))
-  (add-hook 'kill-buffer-hook #'pomidor--cancel-timer)
+  (add-hook 'kill-buffer-hook #'pomidor--cancel-timer t)
   (pomidor--reset))
 
 ;;;###autoload
