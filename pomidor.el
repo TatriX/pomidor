@@ -138,9 +138,13 @@
 
 (defun pomidor-play-sound-file-async (file)
   "Play FILE with some overhead, but at least doesn't freeze Emacs."
-  (let ((command (car command-line-args)))
-    (start-process "play-sound-file-async" nil command "-Q" "--batch" "--eval"
-                   (format "(play-sound-file \"%s\")" file))))
+  (when file
+    (start-process "pomidor-play-sound-file-async"
+                   nil
+                   (car command-line-args)
+                   "-Q"
+                   "--batch"
+                   "--eval" (format "(play-sound-file \"%s\")" file))))
 
 (defun pomidor--make-state ()
   "Make pomidor state."
