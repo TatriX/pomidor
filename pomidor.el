@@ -294,11 +294,24 @@ TIME may be nil."
         (cl-loop
          for i from 1
          for state in pomidor-global-state
+
          as work = (pomidor--work-duration state)
          as overwork = (pomidor--overwork-duration state)
          as break = (pomidor--break-duration state)
          as total = (pomidor--total-duration state)
+
+         with sum-work = (seconds-to-time 0)
+         with sum-overwork = (seconds-to-time 0)
+         with sum-break = (seconds-to-time 0)
+         with sum-total = (seconds-to-time 0)
+
          do (progn
+              (setq sum-work (time-add sum-work work)
+                    sum-total (time-add sum-total total))
+              (when overwork
+                (setq sum-overwork (time-add sum-overwork overwork)))
+              (when break
+                (setq sum-break (time-add sum-break break)))
               (insert
                (format "%3d) Started: [%s] | Work: [%s] | Overwork: [%s] | Break: [%s] | Total: [%s]"
                        i
@@ -309,7 +322,16 @@ TIME may be nil."
                        (pomidor--format-duration total))
                "\n     "
                (pomidor--graph work overwork break)
-               "\n\n")))
+               "\n\n"))
+         finally
+         (insert "     "
+                 (make-string 79 ?-)
+                 "\n     "
+                 (format "Work: [%s] | Overwork: [%s] | Break: [%s] | Total: [%s]"
+                         (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face)
+                         (pomidor--with-face (pomidor--format-duration sum-overwork) 'pomidor-overwork-face)
+                         (pomidor--with-face (pomidor--format-duration sum-break) 'pomidor-break-face)
+                         (pomidor--format-duration sum-total))))
         (read-only-mode +1)))))
 
 (defun pomidor--get-buffer-create ()
