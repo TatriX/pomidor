@@ -33,7 +33,7 @@ start until you press `Space` to start break period.
 Then you can press `Space` (ask for confirmation) or `Enter` to start a new period.
 
 This cycle goes on forever.
-![*pomidor* buffer](http://i.imgur.com/C05ugqH.png)
+![*pomidor* buffer](http://i.imgur.com/wqJ0Oz8.png)
 
 ## Keybindings
 

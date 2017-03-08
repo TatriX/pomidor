@@ -86,12 +86,12 @@
 
 ;;; Faces
 (defface pomidor-time-face
-  '(( t (:height 5.0)))
+  '(( t (:height 4.0)))
   "pomidor face for time"
   :group 'pomidor)
 
 (defface pomidor-timer-face
-  '(( t (:height 4.0)))
+  '(( t (:height 5.0)))
   "pomidor face for timer"
   :group 'pomidor)
 
@@ -313,25 +313,32 @@ TIME may be nil."
               (when break
                 (setq sum-break (time-add sum-break break)))
               (insert
-               (format "%3d) Started: [%s] | Work: [%s] | Overwork: [%s] | Break: [%s] | Total: [%s]"
+               "\n     "
+               (make-string 79 ?-)
+               "\n"
+               (format "%3d) [%s] | [%s] | [%s] | [%s]\t\t %s → %s"
                        i
-                       (pomidor--format-time (pomidor--started state))
                        (pomidor--with-face (pomidor--format-duration work) 'pomidor-work-face)
                        (pomidor--with-face (pomidor--format-duration overwork) 'pomidor-overwork-face)
                        (pomidor--with-face (pomidor--format-duration break) 'pomidor-break-face)
-                       (pomidor--format-duration total))
+                       (pomidor--format-duration total)
+                       (pomidor--format-time (pomidor--started state))
+                       (pomidor--format-time (pomidor--ended state)))
                "\n     "
-               (pomidor--graph work overwork break)
-               "\n\n"))
+               (pomidor--graph work overwork break)))
          finally
-         (insert "     "
+         (insert "\n     "
                  (make-string 79 ?-)
-                 "\n     "
-                 (format "Work: [%s] | Overwork: [%s] | Break: [%s] | Total: [%s]"
-                         (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face)
-                         (pomidor--with-face (pomidor--format-duration sum-overwork) 'pomidor-overwork-face)
-                         (pomidor--with-face (pomidor--format-duration sum-break) 'pomidor-break-face)
-                         (pomidor--format-duration sum-total))))
+                 "\n\n"
+                 (format "     Work\t[%s]\n"
+                         (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face))
+                 (format "     Overwork\t[%s]\n"
+                         (pomidor--with-face (pomidor--format-duration sum-overwork) 'pomidor-overwork-face))
+                 (format "     Break\t[%s]\n"
+                         (pomidor--with-face (pomidor--format-duration sum-break) 'pomidor-break-face))
+                 (format "     Total\t[%s]\n"
+                         (pomidor--format-duration sum-total)))
+         )
         (read-only-mode +1)))))
 
 (defun pomidor--get-buffer-create ()
@@ -414,7 +421,7 @@ TIME may be nil."
   (switch-to-buffer (pomidor--get-buffer-create))
   (unless (eq major-mode 'pomidor-mode)
     (pomidor-mode))
-  (goto-char (point-max)))
+  (pomidor--update))
 
 
 (provide 'pomidor)
