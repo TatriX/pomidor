@@ -257,7 +257,7 @@ TIME may be nil."
    (pomidor--format-time-string work 'pomidor-work-face)
    (let ((skip (- pomidor-seconds (time-to-seconds work))))
      (when (> skip 0)
-       (pomidor--format-time-string skip 'pomidor-skip-face)))
+       (pomidor--format-time-string (seconds-to-time skip) 'pomidor-skip-face)))
    (and overwork (pomidor--format-time-string overwork 'pomidor-overwork-face))
    (and break (pomidor--format-time-string break 'pomidor-break-face))))
 
