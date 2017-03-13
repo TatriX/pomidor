@@ -1,13 +1,20 @@
+# Pomidor [![MELPA](https://melpa.org/packages/pomidor-badge.svg)](https://melpa.org/#/pomidor)
+
 Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.com/) timer.
 
 ## Installation
 
-Clone the repo:
+It's available on melpa:
+```lisp
+    M-x package-install pomidor
+```
+
+Or clone the repo:
 ```sh
 cd ~/.emacs.d
 git clone https://github.com/TatriX/pomidor
 ```
-Add to your .emacs:
+and add to your .emacs:
 ```lisp
 (add-to-list 'load-path "~/.emacs.d/pomidor/")
 (require 'pomidor)
