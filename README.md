@@ -90,4 +90,4 @@ You can adjust update interval by setting `pomidor-update-inteval` variable
 ## Acknowledgments
 Inspired by https://github.com/konr/tomatinho
 
-Sounds from https://www.freesound.org/
+Sounds from [freesound](http://www.freesound.org/people/InspectorJ/sounds/343130/)
