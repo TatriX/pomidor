@@ -411,6 +411,7 @@ TIME may be nil."
 
 \\{pomidor-mode-map}"
   (setq pomidor-timer (run-at-time nil 1 #'pomidor--update))
+  (setq-local tab-width 8)
   (add-hook 'kill-buffer-hook #'pomidor--cancel-timer nil t)
   (pomidor--reset))
 
