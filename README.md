@@ -80,7 +80,17 @@ To change notification you can set `pomidor-alert` variable (defaults to `pomido
 (setq pomidor-alert (lambda () (alert "OMG!11")))
 ```
 
-Also can set `pomidor-update-hook` to do some work on every update.
+Also you can set `pomidor-update-hook` to do some work on every update.
+For example to be notified of break end:
+```lisp
+(defun my-pomidor-update-hook ()
+  (let ((break-duration 300) ;; seconds
+        (ellapsed (time-to-seconds (pomidor-overwork-duration))))
+    (when (> ellapsed break-duration)
+      (pomidor-play-sound-file-async pomidor-sound-overwork))))
+
+(add-hook 'pomidor-update-hook #'my-pomidor-update-hook)
+```
 
 You can adjust update interval by setting `pomidor-update-inteval` variable
 ```lisp

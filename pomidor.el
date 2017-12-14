@@ -208,7 +208,7 @@
     (and break (time-subtract (pomidor--ended state) break))))
 
 (defun pomidor--format-header (time face)
-  "Return formated reader for TIME with FACE."
+  "Return formated header for TIME with FACE."
   (concat (pomidor--with-face (concat (pomidor--format-time (current-time))
                                       " — ")
                               'pomidor-time-face)
