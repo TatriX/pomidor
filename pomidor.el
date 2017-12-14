@@ -285,7 +285,7 @@ TIME may be nil."
 (defun pomidor--render ()
   "Render pomidor state."
   (let ((buffer (pomidor--get-buffer-create)))
-    (when (get-buffer-window buffer)
+    (when (get-buffer-window buffer t)
       (with-current-buffer buffer
         (read-only-mode -1)
         (erase-buffer)
