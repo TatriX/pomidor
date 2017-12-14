@@ -84,8 +84,8 @@ Also you can set `pomidor-update-hook` to do some work on every update.
 For example to be notified of break end:
 ```lisp
 (defun my-pomidor-update-hook ()
-  (let ((break-duration 300) ;; seconds
-        (ellapsed (time-to-seconds (pomidor-overwork-duration))))
+  (let ((break-duration 2) ;; seconds
+        (ellapsed (time-to-seconds (pomidor-break-duration))))
     (when (> ellapsed break-duration)
       (pomidor-play-sound-file-async pomidor-sound-overwork))))
 
