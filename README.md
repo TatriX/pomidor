@@ -86,7 +86,7 @@ For example to be notified of break end:
 (defun my-pomidor-update-hook ()
   (let ((break-duration 2) ;; seconds
         (ellapsed (time-to-seconds (pomidor-break-duration))))
-    (when (> ellapsed break-duration)
+    (when (and (> ellapsed break-duration) (pomidor--break (pomidor--current-state)))
       (pomidor-play-sound-file-async pomidor-sound-overwork))))
 
 (add-hook 'pomidor-update-hook #'my-pomidor-update-hook)
