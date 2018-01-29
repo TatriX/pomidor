@@ -63,6 +63,16 @@ To disable sounds add to your .emacs:
       pomidor-sound-overwork nil)
 ```
 
+To change appearance you may you `customize` or set faces via theme or directly:
+```lisp
+;; for a full list of available faces see `customize' or search for `defface' in the source code
+(progn
+  (set-face-attribute 'pomidor-break-face nil :foreground "#00ff00")
+  (set-face-attribute 'pomidor-overwork-face nil :foreground "#00abff")
+  (set-face-attribute 'pomidor-skip-face nil :foreground "#abbac3")
+  (set-face-attribute 'pomidor-work-face nil :foreground "#ff0000"))
+```
+
 ## Notification
 By default pomidor will show you an overwork notification once per minute.
 See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
