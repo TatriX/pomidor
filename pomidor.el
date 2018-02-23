@@ -82,6 +82,20 @@
 (defvar pomidor-alert #'pomidor-default-alert
   "Pomidor alert function.")
 
+(defun pomidor-play-sound-file-emacs (file)
+  "Play FILE by starting new Emacs process."
+  (if (fboundp 'play-sound-internal)
+      (start-process "pomidor-play-sound-file-emacs"
+                     nil
+                     (car command-line-args)
+                     "-Q"
+                     "--batch"
+                     "--eval" (format "(play-sound-file \"%s\")" file))
+    (warn "This Emacs binary lacks sound support")))
+
+(defvar pomidor-play-sound-file #'pomidor-play-sound-file-emacs
+  "Function to play sounds (preferably async).")
+
 (defvar pomidor-update-hook nil)
 
 ;;; Faces
@@ -135,16 +149,6 @@
 (defun pomidor--reset ()
   "Delete current global state."
   (setq pomidor-global-state (list (pomidor--make-state))))
-
-(defun pomidor-play-sound-file-async (file)
-  "Play FILE with some overhead, but at least doesn't freeze Emacs."
-  (when file
-    (start-process "pomidor-play-sound-file-async"
-                   nil
-                   (car command-line-args)
-                   "-Q"
-                   "--batch"
-                   "--eval" (format "(play-sound-file \"%s\")" file))))
 
 (defun pomidor--make-state ()
   "Make pomidor state."
@@ -261,9 +265,14 @@ TIME may be nil."
    (and overwork (pomidor--format-time-string overwork 'pomidor-overwork-face))
    (and break (pomidor--format-time-string break 'pomidor-break-face))))
 
+(defun pomidor--play-sound-file (file)
+  "Play FILE using `pomidor-play-sound-file' function if any."
+  (when (and file (functionp pomidor-play-sound-file))
+    (funcall pomidor-play-sound-file file)))
+
 (defun pomidor--tick-tack (ellapsed)
   "Play tick or tack based on ELLAPSED."
-  (pomidor-play-sound-file-async
+  (pomidor--play-sound-file
    (if (zerop (mod ellapsed 2))
        pomidor-sound-tick
      pomidor-sound-tack)))
@@ -279,7 +288,7 @@ TIME may be nil."
         (funcall pomidor-alert))
       (run-hooks 'pomidor-update-hook)
       (when (pomidor-overwork-p)
-        (pomidor-play-sound-file-async pomidor-sound-overwork))))
+        (pomidor--play-sound-file pomidor-sound-overwork))))
   (pomidor--render))
 
 (defun pomidor--render ()

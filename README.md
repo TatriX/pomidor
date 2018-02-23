@@ -73,6 +73,17 @@ To change appearance you may you `customize` or set faces via theme or directly:
   (set-face-attribute 'pomidor-work-face nil :foreground "#ff0000"))
 ```
 
+## Sound
+If your Emacs can't play sounds you can provide your own function to do it:
+```lisp
+(setq pomidor-play-sound-file
+      (lambda (file)
+        (start-process "my-pomidor-play-sound"
+                       nil
+                       "mplayer"
+                       file)))
+```
+
 ## Notification
 By default pomidor will show you an overwork notification once per minute.
 See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
