@@ -3,7 +3,7 @@
 ;; Author: TatriX <tatrics@gmail.com>
 ;; URL: https://github.com/TatriX/pomidor
 ;; Keywords: tools, time, applications, pomodoro technique
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "24.3") (alert "1.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'alert)
 
 ;;; Customs
 (defgroup pomidor nil
@@ -39,6 +40,10 @@
 
 (defcustom pomidor-seconds (* 25 60)
   "Time length of a Podomoro round."
+  :type 'integer :group 'pomidor)
+
+(defcustom pomidor-break-seconds (* 5 60)
+  "Time length of a Podomoro break."
   :type 'integer :group 'pomidor)
 
 (defcustom pomidor-update-interval 60
@@ -63,21 +68,34 @@
   "Tick sound during a pomoro run.")
 
 (defvar pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
-  "Tack sound during an overwork.")
+  "Overwork sound.")
+
+(defvar pomidor-sound-break-over (expand-file-name (concat pomidor-dir "overwork.wav"))
+  "Break over sound.")
 
 ;; libnotify for some reason can't display svg
 (defvar pomidor-icon (concat data-directory "images/icons/hicolor/16x16/apps/emacs.png")
   "Default pomidor icon.")
 
+(defun pomidor-default-alert-message ()
+  "Default pomidor alert message if any."
+  (cond
+   ((pomidor-overwork-p)
+    (format "Take a break!\nOverwork: [%s]"
+            (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t)))
+   ((pomidor-break-over-p)
+    (format "Go back to work!\nBreak: [%s]"
+            (format-time-string "%H:%M:%S" (pomidor-break-duration) t)))))
+
 (defun pomidor-default-alert ()
   "Default pomidor alert."
-  (when (pomidor-overwork-p)
-    (alert (format "Take a break!\nOverwork: [%s]"
-                   (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t))
-           :severity 'normal
-           :icon pomidor-icon
-           :title "Pomidor"
-           :category 'pomidor)))
+  (let ((message (pomidor-default-alert-message)))
+    (when message
+      (alert message
+             :severity 'normal
+             :icon pomidor-icon
+             :title "Pomidor"
+             :category 'pomidor))))
 
 (defvar pomidor-alert #'pomidor-default-alert
   "Pomidor alert function.")
@@ -165,11 +183,13 @@
   (plist-get state :break))
 
 (defun pomidor--stopped (state)
-  "Return stopped time for STATE."
+  "Return stopped time for STATE.
+It's a time when user started a new timer after this one."
   (plist-get state :stopped))
 
 (defun pomidor--ended (state)
-  "Return ended time for STATE."
+  "Return ended time for STATE.
+It's either stopped time or current time."
   (or (pomidor--stopped state) (current-time)))
 
 (defun pomidor--work-duration (state)
@@ -183,7 +203,7 @@
       max)))
 
 (defun pomidor--overwork-duration (state)
-  "Return overwork time for STATE."
+  "Return overwork time for STATE or nil."
   ;; (cur - started) - (cur - break) - max
   (let* ((started (pomidor--started state))
          (break (or (pomidor--break state) (pomidor--ended state)))
@@ -201,6 +221,12 @@
   (let* ((state (pomidor--current-state))
          (overwork (pomidor--overwork-duration state)))
     (and overwork (null (pomidor--break state)))))
+
+(defun pomidor-break-over-p ()
+  "Return t if current break is over."
+  (let* ((state (pomidor--current-state))
+         (break (pomidor--break-duration state)))
+    (and break (> (time-to-seconds break) pomidor-break-seconds))))
 
 (defun pomidor--total-duration (state)
   "Return total time for STATE."
@@ -287,8 +313,9 @@ TIME may be nil."
       (when (functionp pomidor-alert)
         (funcall pomidor-alert))
       (run-hooks 'pomidor-update-hook)
-      (when (pomidor-overwork-p)
-        (pomidor--play-sound-file pomidor-sound-overwork))))
+      (cond
+       ((pomidor-overwork-p) (pomidor--play-sound-file pomidor-sound-overwork))
+       ((pomidor-break-over-p) (pomidor--play-sound-file pomidor-sound-break-over)))))
   (pomidor--render))
 
 (defun pomidor--render ()

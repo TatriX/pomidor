@@ -54,13 +54,21 @@ This cycle goes on forever.
 
 ## Customization
 
-You can customize pomidor with `M-x customize-group RET pomidor`.
+You can customize pomidor with `M-x customize-group RET pomidor` or just edit your `.emacs`.
 
-To disable sounds add to your .emacs:
+To change timer length:
+```lisp
+(setq pomidor-seconds (* 25 60)) ; 25 minutes
+(setq pomidor-break-seconds (* 5 60)) ; 5 minutes
+
+```
+
+To disable or configure sounds:
 ```lisp
 (setq pomidor-sound-tick nil
       pomidor-sound-tack nil
-      pomidor-sound-overwork nil)
+      pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
+	  pomidor-sound-break-over (expand-file-name (concat (getenv "HOME") "/Music/overwork.wav")))
 ```
 
 To change appearance you may you `customize` or set faces via theme or directly:
@@ -102,13 +110,9 @@ To change notification you can set `pomidor-alert` variable (defaults to `pomido
 ```
 
 Also you can set `pomidor-update-hook` to do some work on every update.
-For example to be notified of break end:
 ```lisp
 (defun my-pomidor-update-hook ()
-  (let ((break-duration 2) ;; seconds
-        (ellapsed (time-to-seconds (pomidor-break-duration))))
-    (when (and (> ellapsed break-duration) (pomidor--break (pomidor--current-state)))
-      (pomidor-play-sound-file-async pomidor-sound-overwork))))
+  (alert "Zzz"))
 
 (add-hook 'pomidor-update-hook #'my-pomidor-update-hook)
 ```
