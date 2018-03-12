@@ -83,7 +83,7 @@
    ((pomidor-overwork-p)
     (format "Take a break!\nOverwork: [%s]"
             (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t)))
-   ((pomidor-break-over-p)
+   ((pomidor-break-over-notify-p)
     (format "Go back to work!\nBreak: [%s]"
             (format-time-string "%H:%M:%S" (pomidor-break-duration) t)))))
 
@@ -172,7 +172,8 @@
   "Make pomidor state."
   (list :started (current-time)
         :break nil
-        :stopped nil))
+        :stopped nil
+        :snooze nil))
 
 (defun pomidor--started (state)
   "Return started time for STATE."
@@ -222,11 +223,20 @@ It's either stopped time or current time."
          (overwork (pomidor--overwork-duration state)))
     (and overwork (null (pomidor--break state)))))
 
+(defun pomidor-break-over-notify-p ()
+  "Return t if current break is over and user should be notified about it.
+To snooze the notification use `pomidor-break'."
+  (and (pomidor-break-over-p) (not (pomidor-snooze-p))))
+
 (defun pomidor-break-over-p ()
   "Return t if current break is over."
   (let* ((state (pomidor--current-state))
          (break (pomidor--break-duration state)))
     (and break (> (time-to-seconds break) pomidor-break-seconds))))
+
+(defun pomidor-snooze-p ()
+  "Return t if user snooze end of break alarm."
+  (plist-get (pomidor--current-state) :snooze))
 
 (defun pomidor--total-duration (state)
   "Return total time for STATE."
@@ -314,8 +324,10 @@ TIME may be nil."
         (funcall pomidor-alert))
       (run-hooks 'pomidor-update-hook)
       (cond
-       ((pomidor-overwork-p) (pomidor--play-sound-file pomidor-sound-overwork))
-       ((pomidor-break-over-p) (pomidor--play-sound-file pomidor-sound-break-over)))))
+       ((pomidor-overwork-p)
+        (pomidor--play-sound-file pomidor-sound-overwork))
+       ((pomidor-break-over-notify-p)
+        (pomidor--play-sound-file pomidor-sound-break-over)))))
   (pomidor--render))
 
 (defun pomidor--render ()
@@ -425,8 +437,10 @@ TIME may be nil."
   (interactive)
   (let ((state (pomidor--current-state)))
     (if (pomidor--break state)
-        (when (yes-or-no-p "Stop break and start new pomidor?")
-          (pomidor-stop))
+        (progn
+          (plist-put state :snooze t)
+          (when (yes-or-no-p "Stop break and start new pomidor?")
+            (pomidor-stop)))
       (plist-put state :break (current-time)))))
 
 (defun pomidor-reset ()

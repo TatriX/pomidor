@@ -39,6 +39,10 @@ start until you press `Space` to start break period.
 
 Then you can press `Space` (ask for confirmation) or `Enter` to start a new period.
 
+After 5 minutes of the break period, pomidor will start telling you
+that you should finish your break. To snooze it just press `Space` and
+select `n`.
+
 This cycle goes on forever.
 ![*pomidor* buffer](http://i.imgur.com/wqJ0Oz8.png)
 
