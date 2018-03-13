@@ -121,7 +121,7 @@ Also you can set `pomidor-update-hook` to do some work on every update.
 (add-hook 'pomidor-update-hook #'my-pomidor-update-hook)
 ```
 
-You can adjust update interval by setting `pomidor-update-inteval` variable
+You can adjust update interval by setting `pomidor-update-interval` variable
 ```lisp
 (setq pomidor-update-interval 30) ; seconds
 ```
