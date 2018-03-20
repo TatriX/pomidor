@@ -456,7 +456,7 @@ TIME may be nil."
     (plist-put state :stopped (current-time)))
   (nconc pomidor-global-state (list (pomidor--make-state))))
 
-(define-derived-mode pomidor-mode fundamental-mode "pomidor"
+(define-derived-mode pomidor-mode special-mode "pomidor"
   "Major mode for Pomidor.
 
 \\{pomidor-mode-map}"
