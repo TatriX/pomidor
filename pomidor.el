@@ -50,6 +50,9 @@
   "Interval in seconds when pomidor should run hooks and play overwork sounds."
   :type 'integer :group 'pomidor)
 
+(defcustom pomidor-confirm-end-break t
+  "If t ask for confirmation before ending a break and starting new a pomodoro."
+  :type 'boolean :group 'pomidor)
 
 ;;; Vars
 (defvar pomidor-time-format "%H:%M:%S"
@@ -439,7 +442,8 @@ TIME may be nil."
     (if (pomidor--break state)
         (progn
           (plist-put state :snooze t)
-          (when (yes-or-no-p "Stop break and start new pomidor?")
+          (when (or (not pomidor-confirm-end-break)
+                    (yes-or-no-p "Stop break and start new pomidor?"))
             (pomidor-stop)))
       (plist-put state :break (current-time)))))
 
