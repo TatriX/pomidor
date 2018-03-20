@@ -161,6 +161,9 @@
 (defvar pomidor-graph-char ?█
   "Pomidor char for displaying tubes.")
 
+(defvar pomidor-header-separator " — "
+  "Pomidor string to separate time and duration in header.")
+
 ;;; Private
 
 (defun pomidor--current-state ()
@@ -253,7 +256,7 @@ To snooze the notification use `pomidor-break'."
 (defun pomidor--format-header (time face)
   "Return formated header for TIME with FACE."
   (concat (pomidor--with-face (concat (pomidor--format-time (current-time))
-                                      " — ")
+                                      pomidor-header-separator)
                               'pomidor-time-face)
           (propertize (pomidor--format-duration time)
                       'face `(:inherit (,face pomidor-timer-face)))))
