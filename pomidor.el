@@ -55,26 +55,36 @@
   :type 'boolean :group 'pomidor)
 
 ;;; Vars
-(defvar pomidor-time-format "%H:%M:%S"
-  "Time format for podomoro clock.")
+(defcustom pomidor-time-format "%H:%M:%S"
+  "Time format for podomoro clock."
+  :type 'string :group 'pomidor)
 
-(defvar pomidor-duration-format "%H:%M:%S"
-  "Time format for duration intervals.")
+(defcustom pomidor-duration-format "%H:%M:%S"
+  "Time format for duration intervals."
+  :type 'string :group 'pomidor)
 
 (defconst pomidor-dir (file-name-directory (or load-file-name buffer-file-name))
-  "Pomidor directory in which sounds  store.")
+  "Pomidor directory in which sounds store.")
 
-(defvar pomidor-sound-tick (expand-file-name (concat pomidor-dir "tick.wav"))
-  "Tick sound during a pomoro run.")
+(defcustom pomidor-sound-tick (expand-file-name (concat pomidor-dir "tick.wav"))
+  "Tick sound during a pomoro run."
+  :type '(file :must-match t)
+  :group 'pomidor)
 
-(defvar pomidor-sound-tack (expand-file-name (concat pomidor-dir "tack.wav"))
-  "Tick sound during a pomoro run.")
+(defcustom pomidor-sound-tack (expand-file-name (concat pomidor-dir "tack.wav"))
+  "Tick sound during a pomoro run."
+  :type '(file :must-match t)
+  :group 'pomidor)
 
-(defvar pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
-  "Overwork sound.")
+(defcustom pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
+  "Overwork sound."
+  :type '(file :must-match t)
+  :group 'pomidor)
 
-(defvar pomidor-sound-break-over (expand-file-name (concat pomidor-dir "overwork.wav"))
-  "Break over sound.")
+(defcustom pomidor-sound-break-over (expand-file-name (concat pomidor-dir "overwork.wav"))
+  "Break over sound."
+  :type '(file :must-match t)
+  :group 'pomidor)
 
 ;; libnotify for some reason can't display svg
 (defvar pomidor-icon (concat data-directory "images/icons/hicolor/16x16/apps/emacs.png")
@@ -100,8 +110,12 @@
              :title "Pomidor"
              :category 'pomidor))))
 
-(defvar pomidor-alert #'pomidor-default-alert
-  "Pomidor alert function.")
+(defcustom pomidor-alert #'pomidor-default-alert
+  "Pomidor alert function.
+To disable alerts, set to nil."
+  :type '(choice (const nil)
+                 function)
+  :group 'pomidor)
 
 (defun pomidor-play-sound-file-emacs (file)
   "Play FILE by starting new Emacs process."
@@ -114,8 +128,12 @@
                      "--eval" (format "(play-sound-file \"%s\")" file))
     (warn "This Emacs binary lacks sound support")))
 
-(defvar pomidor-play-sound-file #'pomidor-play-sound-file-emacs
-  "Function to play sounds (preferably async).")
+(defcustom pomidor-play-sound-file #'pomidor-play-sound-file-emacs
+  "Function to play sounds (preferably async).
+To disable sounds, set to nil."
+  :type '(choice (const nil)
+                 function)
+  :group 'pomidor)
 
 (defvar pomidor-update-hook nil)
 
