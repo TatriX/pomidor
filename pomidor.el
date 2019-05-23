@@ -3,7 +3,7 @@
 ;; Author: TatriX <tatrics@gmail.com>
 ;; URL: https://github.com/TatriX/pomidor
 ;; Keywords: tools, time, applications, pomodoro technique
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: ((emacs "24.3") (alert "1.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
