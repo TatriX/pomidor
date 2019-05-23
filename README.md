@@ -6,7 +6,13 @@ Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.c
 
 It's available on melpa:
 ```lisp
-    M-x package-install pomidor
+M-x package-install pomidor
+
+;; or with use-package, global keybinding and disabled sounds:
+(use-package pomidor
+  :bind (("<f12>" . pomidor))
+  :config (setq pomidor-sound-tick nil
+                pomidor-sound-tack nil))
 ```
 
 Or clone the repo:
@@ -23,7 +29,7 @@ and add to your .emacs:
 
 ## Usage
 
-Bind it to a key with the following command:
+Bind it to a key with the following command if you haven't done this with `use-package`:
 
 ```lisp
   (global-set-key (kbd "<f12>") #'pomidor)
@@ -44,7 +50,7 @@ that you should finish your break. To snooze it just press `Space` and
 select `n`.
 
 This cycle goes on forever.
-![*pomidor* buffer](http://i.imgur.com/wqJ0Oz8.png)
+[*pomidor* buffer](https://i.imgur.com/33A938J.png)
 
 ## Keybindings
 
