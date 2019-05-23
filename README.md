@@ -5,7 +5,7 @@ Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.c
 ## Installation
 
 It's available on melpa:
-```lisp
+```elisp
 M-x package-install pomidor
 
 ;; or with use-package, global keybinding and disabled sounds:
@@ -21,7 +21,7 @@ cd ~/.emacs.d
 git clone https://github.com/TatriX/pomidor
 ```
 and add to your .emacs:
-```lisp
+```elisp
 (add-to-list 'load-path "~/.emacs.d/pomidor/")
 (require 'pomidor)
 
@@ -31,7 +31,7 @@ and add to your .emacs:
 
 Bind it to a key with the following command if you haven't done this with `use-package`:
 
-```lisp
+```elisp
   (global-set-key (kbd "<f12>") #'pomidor)
 ```
 Or run simply `M-x pomidor`
@@ -67,14 +67,14 @@ This cycle goes on forever.
 You can customize pomidor with `M-x customize-group RET pomidor` or just edit your `.emacs`.
 
 To change timer length:
-```lisp
+```elisp
 (setq pomidor-seconds (* 25 60)) ; 25 minutes
 (setq pomidor-break-seconds (* 5 60)) ; 5 minutes
 
 ```
 
 To disable or configure sounds:
-```lisp
+```elisp
 (setq pomidor-sound-tick nil
       pomidor-sound-tack nil
       pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
@@ -82,7 +82,7 @@ To disable or configure sounds:
 ```
 
 To change appearance you may you `customize` or set faces via theme or directly:
-```lisp
+```elisp
 ;; for a full list of available faces see `customize' or search for `defface' in the source code
 (progn
   (set-face-attribute 'pomidor-break-face nil :foreground "#00ff00")
@@ -93,7 +93,7 @@ To change appearance you may you `customize` or set faces via theme or directly:
 
 ## Sound
 If your Emacs can't play sounds you can provide your own function to do it:
-```lisp
+```elisp
 (setq pomidor-play-sound-file
       (lambda (file)
         (start-process "my-pomidor-play-sound"
@@ -107,7 +107,7 @@ By default pomidor will show you an overwork notification once per minute.
 See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
 
 You can change default notification style globally:
-```lisp
+```elisp
 (setq alert-default-style 'libnotify)
 ;; or 'growl (see alert docs)
 ```
@@ -115,12 +115,12 @@ You can change default notification style globally:
 
 
 To change notification you can set `pomidor-alert` variable (defaults to `pomidor-default-alert`):
-```lisp
+```elisp
 (setq pomidor-alert (lambda () (alert "OMG!11")))
 ```
 
 Also you can set `pomidor-update-hook` to do some work on every update.
-```lisp
+```elisp
 (defun my-pomidor-update-hook ()
   (alert "Zzz"))
 
@@ -128,7 +128,7 @@ Also you can set `pomidor-update-hook` to do some work on every update.
 ```
 
 You can adjust update interval by setting `pomidor-update-interval` variable
-```lisp
+```elisp
 (setq pomidor-update-interval 30) ; seconds
 ```
 
