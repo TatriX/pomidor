@@ -89,18 +89,17 @@ To disable or configure sounds:
 	  pomidor-sound-break-over (expand-file-name (concat (getenv "HOME") "/Music/overwork.wav")))
 ```
 
-To change appearance you may you `customize` or set faces via theme or directly:
+To change appearance your can [(customize-face)](https://www.gnu.org/software/emacs/manual/html_node/emacs/Face-Customization.html), use your theme or use elisp:
 ```elisp
 ;; for a full list of available faces see `customize' or search for `defface' in the source code
-(progn
-  (set-face-attribute 'pomidor-break-face nil :foreground "#00ff00")
-  (set-face-attribute 'pomidor-overwork-face nil :foreground "#00abff")
-  (set-face-attribute 'pomidor-skip-face nil :foreground "#abbac3")
-  (set-face-attribute 'pomidor-work-face nil :foreground "#ff0000"))
+(set-face-attribute 'pomidor-break-face nil :foreground "#00ff00")
+(set-face-attribute 'pomidor-overwork-face nil :foreground "#00abff")
+(set-face-attribute 'pomidor-skip-face nil :foreground "#abbac3")
+(set-face-attribute 'pomidor-work-face nil :foreground "#ff0000")
 ```
 
 ## Sound
-If your Emacs can't play sounds you can provide your own function to do it:
+If your Emacs cannot play sounds you can provide your own function to do it:
 ```elisp
 (setq pomidor-play-sound-file
       (lambda (file)
