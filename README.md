@@ -50,7 +50,7 @@ that you should finish your break. To snooze it just press `Space` and
 select `n`.
 
 This cycle goes on forever.
-[*pomidor* buffer](https://i.imgur.com/33A938J.png)
+![*pomidor* buffer](https://i.imgur.com/33A938J.png)
 
 ## Keybindings
 
