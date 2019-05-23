@@ -2,6 +2,8 @@
 
 Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.com/) timer.
 
+![*pomidor* buffer](https://i.imgur.com/33A938J.png)
+
 ## Installation
 
 It's available on melpa:
@@ -17,10 +19,9 @@ M-x package-install pomidor
 
 Or clone the repo:
 ```sh
-cd ~/.emacs.d
-git clone https://github.com/TatriX/pomidor
+git clone https://github.com/TatriX/pomidor ~/.emacs.d/pomidor
 ```
-and add to your .emacs:
+and add to your init file:
 ```elisp
 (add-to-list 'load-path "~/.emacs.d/pomidor/")
 (require 'pomidor)
@@ -37,20 +38,19 @@ Bind it to a key with the following command if you haven't done this with `use-p
 Or run simply `M-x pomidor`
 
 When you start pomidor, you automatically begin your first
-pomodoro. There is nothing to do at this point, except to work. You
-can, of course, restart the pomodoro if you get distracted, or even
-the whole series, but the program takes care of itself until the
-25-minute mark is reached. At this point, the overwork period will
-start until you press `Space` to start break period.
+pomodoro. There is nothing to do at this point, except for work. You
+can, of course, restart the pomodoro if you get distracted, but the
+program takes care of itself until the 25-minute mark is reached. At
+this point the overwork period starts and lasts until you press
+`Space` to start break period.
 
-Then you can press `Space` (ask for confirmation) or `Enter` to start a new period.
+Then you can press `Space` (which asks for confirmation) or `Enter` to start a new period.
 
-After 5 minutes of the break period, pomidor will start telling you
-that you should finish your break. To snooze it just press `Space` and
-select `n`.
+After 5 minutes of break time, pomidor will start telling you that you
+should finish your break. To snooze it just press `Space` and select
+`n`.
 
 This cycle goes on forever.
-![*pomidor* buffer](https://i.imgur.com/33A938J.png)
 
 ## Keybindings
 
@@ -66,10 +66,10 @@ This cycle goes on forever.
 
 You can customize pomidor with `M-x customize-group RET pomidor` or just edit your `.emacs`.
 
-To change timer length:
+To change timer duration:
 ```elisp
-(setq pomidor-seconds (* 25 60)) ; 25 minutes
-(setq pomidor-break-seconds (* 5 60)) ; 5 minutes
+(setq pomidor-seconds (* 25 60)) ; 25 minutes for the work period
+(setq pomidor-break-seconds (* 5 60)) ; 5 minutes break time
 
 ```
 
@@ -102,17 +102,15 @@ If your Emacs can't play sounds you can provide your own function to do it:
                        file)))
 ```
 
-## Notification
+## Notifications
 By default pomidor will show you an overwork notification once per minute.
-See [alert](https://github.com/jwiegley/alert/) documentation to learn how change alert settings.
+See [alert](https://github.com/jwiegley/alert/) documentation to learn how to change alert settings.
 
 You can change default notification style globally:
 ```elisp
 (setq alert-default-style 'libnotify)
 ;; or 'growl (see alert docs)
 ```
-
-
 
 To change notification you can set `pomidor-alert` variable (defaults to `pomidor-default-alert`):
 ```elisp
