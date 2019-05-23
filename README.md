@@ -7,14 +7,22 @@ Pomidor is a simple and cool [pomodoro technique](http://www.pomodorotechnique.c
 ## Installation
 
 It's available on melpa:
-```elisp
+```
 M-x package-install pomidor
+```
 
-;; or with use-package, global keybinding and disabled sounds:
+Or using [use-package](https://github.com/jwiegley/use-package) with global keybinding, disabled tick-tack sound and custom hook:
+```elisp
 (use-package pomidor
   :bind (("<f12>" . pomidor))
   :config (setq pomidor-sound-tick nil
-                pomidor-sound-tack nil))
+                pomidor-sound-tack nil)
+  :hook (pomidor-mode . (lambda ()
+                          (display-line-numbers-mode -1) ; Emacs 26.1+
+                          (setq left-fringe-width 0 right-fringe-width 0)
+                          (setq left-margin-width 2 right-margin-width 0)
+                          ;; force fringe update
+                          (set-window-buffer nil (current-buffer)))))
 ```
 
 Or clone the repo:
