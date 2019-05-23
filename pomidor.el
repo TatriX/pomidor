@@ -241,6 +241,10 @@ It's either stopped time or current time."
     (when (> (time-to-seconds overwork) 0)
       overwork)))
 
+(defun pomidor-running-p ()
+  "Return t if pomidor is running right now."
+  (timerp pomidor-timer))
+
 (defun pomidor-overwork-p ()
   "Return t if current state is overwork."
   (let* ((state (pomidor--current-state))
@@ -420,7 +424,8 @@ TIME may be nil."
 (defun pomidor--cancel-timer ()
   "Cancel pomidor timer."
   (when (timerp pomidor-timer)
-    (cancel-timer pomidor-timer)))
+    (cancel-timer pomidor-timer)
+    (setq pomidor-timer nil)))
 
 ;;; Public
 
