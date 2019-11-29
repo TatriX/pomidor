@@ -503,8 +503,7 @@ TIME may be nil."
   (interactive)
   (switch-to-buffer (pomidor--get-buffer-create))
   (unless (eq major-mode 'pomidor-mode)
-    (pomidor-mode))
-  (pomidor--update))
+    (pomidor-mode)))
 
 
 (provide 'pomidor)
