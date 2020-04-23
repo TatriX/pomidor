@@ -60,6 +60,20 @@ should finish your break. To snooze it just press `Space` and select
 
 This cycle goes on forever.
 
+## History mode
+
+You can save your pomodoro sessions in a file and compare your
+progress through this methodology as time goes by.
+
+When you desire to save a session just do `M-x pomidor-save-session`,
+it will ask to close your pomidor and will save the current state to a
+file defined by `pomidor-save-session-file` defaults to
+`~/.emacs.d/pomidor-sessions.el`.
+
+After that you can fire `M-x pomidor-history` to take a look at your
+snapshots. You can press `n` (`pomidor-history-next`) or `p`
+(`pomidor-history-previous`) to navigate between the snapshots.
+
 ## Keybindings
 
 | Key   | Description          |
