@@ -90,7 +90,7 @@
   :type '(file :must-match t)
   :group 'pomidor)
 
-(defcustom pomidor-save-session-file (expand-file-name user-emacs-directory "pomidor-session.el")
+(defcustom pomidor-save-session-file (expand-file-name "pomidor-session.el" user-emacs-directory)
   "Pomidor session store file."
   :type '(file :must-match t)
   :group 'pomidor)
