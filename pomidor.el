@@ -590,17 +590,21 @@ TIME may be nil."
       (message "You should save at least one session first.")
     (switch-to-buffer (pomidor--get-history-buffer-create))
     (pomidor-history-previous)
-    (pomidor-history-mode)))
+    (unless (eq major-mode 'pomidor-history-mode)
+      (pomidor-history-mode))))
 
-;;;###autoload
-(define-minor-mode pomidor-history-mode
-  "Minor mode for Pomidor History."
-  :lighter "pomidor-history"
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "q") #'quit-window)
-            (define-key map (kbd "n") #'pomidor-history-next)
-            (define-key map (kbd "p") #'pomidor-history-previous)
-            map)
+(defvar pomidor-history-mode-map
+  (let ((map (make-keymap)))
+    (define-key map (kbd "q") #'quit-window)
+    (define-key map (kbd "n") #'pomidor-history-next)
+    (define-key map (kbd "p") #'pomidor-history-previous)
+    (suppress-keymap map)
+    map))
+
+(define-derived-mode pomidor-history-mode special-mode "pomidor-history"
+  "Major mode for Pomidor History.
+
+\\{pomidor-history-mode-map}"
   (setq pomidor-timer nil)
   (setq pomidor--current-history-session nil))
 
