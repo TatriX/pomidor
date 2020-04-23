@@ -557,8 +557,11 @@ TIME may be nil."
                                                session-dates)
                                     session-dates))
              (previous-session (car (last valid-session-dates))))
-        (setq pomidor--current-history-session previous-session)
-        (pomidor--render (pomidor--get-history-buffer-create) (gethash previous-session session-table))))))
+        (if previous-session
+            (progn
+              (setq pomidor--current-history-session previous-session)
+              (pomidor--render (pomidor--get-history-buffer-create) (gethash previous-session session-table)))
+          (message "History is over, go forward."))))))
 
 (defun pomidor-history-next ()
   "Move forward in your pomidor history."
@@ -573,8 +576,11 @@ TIME may be nil."
                                                session-dates)
                                     session-dates))
              (next-session (car valid-session-dates)))
-        (setq pomidor--current-history-session next-session)
-        (pomidor--render (pomidor--get-history-buffer-create) (gethash next-session session-table))))))
+        (if next-session
+            (progn
+              (setq pomidor--current-history-session next-session)
+              (pomidor--render (pomidor--get-history-buffer-create) (gethash next-session session-table)))
+          (message "History is over, go backward."))))))
 
 
 (defun pomidor-history ()
