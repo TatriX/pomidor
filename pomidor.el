@@ -90,6 +90,11 @@
   :type '(file :must-match t)
   :group 'pomidor)
 
+(defcustom pomidor-save-session-file (expand-file-name user-emacs-directory "pomidor-session.el")
+  "Pomidor session store file."
+  :type '(file :must-match t)
+  :group 'pomidor)
+
 ;; libnotify for some reason can't display svg
 (defvar pomidor-icon (concat data-directory "images/icons/hicolor/16x16/apps/emacs.png")
   "Default pomidor icon.")
@@ -147,6 +152,11 @@ To disable sounds, set to nil."
   "pomidor face for time"
   :group 'pomidor)
 
+(defface pomidor-date-face
+  '(( t (:height 4.0)))
+  "pomidor face for date"
+  :group 'pomidor)
+
 (defface pomidor-timer-face
   '(( t (:height 5.0)))
   "pomidor face for timer"
@@ -185,6 +195,12 @@ To disable sounds, set to nil."
 
 (defvar pomidor-header-separator " — "
   "Pomidor string to separate time and duration in header.")
+
+(defvar pomidor-header-session-name-separator " : "
+  "Pomidor string to separate the regular header from the session name in history mode.")
+
+(defvar pomidor--current-history-session nil
+  "Hold the current visible pomidor history snapshot.")
 
 ;;; Private
 
@@ -286,7 +302,11 @@ To snooze the notification use `pomidor-break'."
                                         pomidor-header-separator)
                                 'pomidor-time-face)
             (propertize (pomidor--format-duration time)
-                        'face `(:inherit (,face pomidor-timer-face))))))
+                        'face `(:inherit (,face pomidor-timer-face)))
+            (when (eq major-mode 'pomidor-history-mode)
+              (pomidor--with-face (concat pomidor-header-session-name-separator
+                                          (format-time-string "%Y-%m-%d" freezed-time))
+                                  'pomidor-date-face)))))
 
 (defun pomidor--header (state)
   "Return header."
@@ -359,7 +379,7 @@ TIME may be nil."
         (pomidor--play-sound-file pomidor-sound-overwork))
        ((pomidor-break-over-notify-p)
         (pomidor--play-sound-file pomidor-sound-break-over)))))
-  (pomidor--render))
+  (pomidor--render (pomidor--get-buffer-create) pomidor-global-state))
 
 (defun pomidor--render (buffer states)
   "Render pomidor state."
@@ -433,6 +453,13 @@ TIME may be nil."
     (cancel-timer pomidor-timer)
     (setq pomidor-timer nil)))
 
+(defun pomidor--read-session ()
+  "Read the saved sessions."
+  (with-temp-buffer
+    (insert-file-contents pomidor-save-session-file)
+    (goto-char (point-min))
+    (read (current-buffer))))
+
 ;;; Public
 
 (defvar pomidor-mode-map
@@ -492,16 +519,6 @@ TIME may be nil."
     (plist-put state :stopped (current-time)))
   (nconc pomidor-global-state (list (pomidor--make-state))))
 
-(defvar pomidor-save-session-file "~/.emacs.d/pomidor-sessions.el"
-  "File to save your sessions.")
-
-(defun pomidor--read-session ()
-  "Read the saved sessions."
-  (with-temp-buffer
-    (insert-file-contents pomidor-save-session-file)
-    (goto-char (point-min))
-    (read (current-buffer))))
-
 (defun pomidor-save-session ()
   "Save the current session in a file."
   (interactive)
@@ -524,25 +541,6 @@ TIME may be nil."
       (with-temp-file pomidor-save-session-file
         (insert (prin1-to-string file-table)))))
   (message "Pomidor session saved!"))
-
-(defun pomidor--update ()
-  "Update pomidor state."
-  (let* ((state (pomidor--current-state))
-         (total (pomidor--total-duration state))
-         (ellapsed (round (time-to-seconds total))))
-    (when (zerop (mod ellapsed pomidor-update-interval))
-      (when (functionp pomidor-alert)
-        (funcall pomidor-alert))
-      (run-hooks 'pomidor-update-hook)
-      (cond
-       ((pomidor-overwork-p)
-        (pomidor--play-sound-file pomidor-sound-overwork))
-       ((pomidor-break-over-notify-p)
-        (pomidor--play-sound-file pomidor-sound-break-over)))))
-  (pomidor--render (pomidor--get-buffer-create) pomidor-global-state))
-
-(defvar pomidor--current-history-session nil
-  "Hold the current visible pomidor history snapshot.")
 
 (defun pomidor-history-previous ()
   "Move backward in your pomidor history."
@@ -581,7 +579,6 @@ TIME may be nil."
               (setq pomidor--current-history-session next-session)
               (pomidor--render (pomidor--get-history-buffer-create) (gethash next-session session-table)))
           (message "History is over, go backward."))))))
-
 
 (defun pomidor-history ()
   "A simple pomodoro history feature. Compare your work over time."
