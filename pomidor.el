@@ -463,17 +463,17 @@ TIME may be nil."
 
 (defun pomidor--valid-sessions-dates (session-dates direction)
   "Get valid date of SESSION-DATES from history data to move in correct DIRECTION."
-  (let ((fn (if (= direction :backward)
-                (lambda (v)
-                  (time-less-p
-                   (parse-iso8601-time-string v)
-                   (parse-iso8601-time-string pomidor--current-history-session)))
-              (lambda (v)
-                (time-less-p
-                 (parse-iso8601-time-string pomidor--current-history-session)
-                 (parse-iso8601-time-string v))))))
+  (let ((fun (lambda (v)
+               (if (equalp direction :backward)
+                   (time-less-p
+                    (parse-iso8601-time-string v)
+                    (parse-iso8601-time-string pomidor--current-history-session))
+
+                 (time-less-p
+                  (parse-iso8601-time-string pomidor--current-history-session)
+                  (parse-iso8601-time-string v))))))
     (if pomidor--current-history-session
-        (-filter fn session-dates)
+        (-filter (lambda (dt) (funcall fun dt)) session-dates)
       session-dates)))
 
 ;;; Public
@@ -565,14 +565,13 @@ TIME may be nil."
          (session-dates (hash-table-keys session-table)))
     (if (= (length session-dates) 0)
         (message "You have no session saved.")
-      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :backward))
-             (previous-session (car (last valid-session-dates))))
-        (if previous-session
+      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :backward)))
+        (if valid-session-dates
             (progn
-              (setq pomidor--current-history-session previous-session)
+              (setq pomidor--current-history-session (car (last valid-session-dates)))
               (pomidor--render
                (pomidor--get-history-buffer-create)
-               (gethash previous-session session-table)))
+               (gethash (car (last valid-session-dates)) session-table)))
           (message "History is over, go forward."))))))
 
 (defun pomidor-history-next ()
@@ -582,14 +581,13 @@ TIME may be nil."
          (session-dates (hash-table-keys session-table)))
     (if (= (length session-dates) 0)
         (message "You have no sessions saved.")
-      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :forward))
-             (next-session (car valid-session-dates)))
-        (if next-session
+      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :forward)))
+        (if valid-session-dates
             (progn
-              (setq pomidor--current-history-session next-session)
+              (setq pomidor--current-history-session (car valid-session-dates))
               (pomidor--render
                (pomidor--get-history-buffer-create)
-               (gethash next-session session-table)))
+               (gethash (car valid-session-dates) session-table)))
           (message "History is over, go backward."))))))
 
 (defun pomidor-history ()
