@@ -77,6 +77,8 @@ After that you can fire `M-x pomidor-history` to take a look at your
 snapshots. You can press `n` (`pomidor-history-next`) or `p`
 (`pomidor-history-previous`) to navigate between the snapshots.
 
+Check a demo of this feature at [here](https://youtu.be/BJTT7nILcsY).
+
 ## Keybindings
 
 | Key   | Description          |
