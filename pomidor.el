@@ -91,7 +91,7 @@
   :type '(file :must-match t)
   :group 'pomidor)
 
-(defcustom pomidor-save-session-file (expand-file-name "pomidor-session.el" user-emacs-directory)
+(defcustom pomidor-save-session-file (expand-file-name "pomidor-session.json" user-emacs-directory)
   "Pomidor session store file."
   :type '(file :must-match t)
   :group 'pomidor)
@@ -456,10 +456,22 @@ TIME may be nil."
 
 (defun pomidor--read-session ()
   "Read the saved sessions."
-  (with-temp-buffer
-    (insert-file-contents pomidor-save-session-file)
-    (goto-char (point-min))
-    (read (current-buffer))))
+  (let* ((data (with-temp-buffer
+                 (insert-file-contents pomidor-save-session-file)
+                 (goto-char (point-min))
+                 (json-parse-buffer :object-type 'plist
+                                    :array-type 'list
+                                    :null-object nil)))
+         (data  (append data nil))
+         (ht (make-hash-table :test 'equal)))
+    (cl-loop
+     for entry in data
+     as snapshot-name = (plist-get entry :snapshot)
+     as pomidor = (plist-get entry :value)
+     do (puthash snapshot-name
+                 (cons pomidor (gethash snapshot-name ht)) ht))
+    ht))
+
 
 (defun pomidor--valid-sessions-dates (session-dates direction)
   "Get valid date of SESSION-DATES from history data to move in correct DIRECTION."
@@ -542,20 +554,28 @@ TIME may be nil."
     (pomidor-quit)
     (plist-put (pomidor--current-state) :stopped time-asked-to-save)
 
-    (when (not (file-exists-p pomidor-save-session-file))
-      (with-temp-file pomidor-save-session-file
-        (insert (prin1-to-string (make-hash-table :test 'equal)))))
-    (let* ((file-table (pomidor--read-session))
-           (name (format-time-string "%Y-%m-%dT%H:%M:%S" time-asked-to-save))
-           (global-state (-map (lambda (pomodoro) (plist-put pomodoro :current-time time-asked-to-save))
+    (let* ((file-table (if (not (file-exists-p pomidor-save-session-file))
+                           (make-hash-table :test 'equal)
+                         (pomidor--read-session)))
+           (name  (format-time-string "%Y-%m-%dT%H:%M:%S" time-asked-to-save))
+           (global-state (-map (lambda (pomidor) (plist-put pomidor :current-time time-asked-to-save))
                                pomidor-global-state))
-           (global-state (-filter (lambda (pomodoro) (or (plist-get pomodoro :stopped)
-                                                    (plist-get pomodoro :break)
-                                                    (plist-get pomodoro :snooze)))
-                                  pomidor-global-state)))
+           (global-state (-filter (lambda (pomidor) (or (plist-get pomidor :stopped)
+                                                    (plist-get pomidor :break)
+                                                    (plist-get pomidor :snooze)))
+                                  pomidor-global-state))
+           (counter 1))
       (puthash name global-state file-table)
       (with-temp-file pomidor-save-session-file
-        (insert (prin1-to-string file-table)))))
+        (insert "[")
+        (cl-loop for k being
+               the hash-keys in file-table
+               using (hash-value v)
+               do (cl-loop for pomidor in v
+                           do (when (> counter 1) (insert ","))
+                           do (insert (json-encode-plist (list :snapshot k :value pomidor)))
+                           do (setq counter 2)))
+        (insert "]"))))
   (message "Pomidor session saved!"))
 
 (defun pomidor-history-previous ()
@@ -596,9 +616,9 @@ TIME may be nil."
   (if (not (file-exists-p pomidor-save-session-file))
       (message "You should save at least one session first.")
     (switch-to-buffer (pomidor--get-history-buffer-create))
-    (pomidor-history-previous)
     (unless (eq major-mode 'pomidor-history-mode)
-      (pomidor-history-mode))))
+      (pomidor-history-mode))
+    (pomidor-history-previous)))
 
 (defvar pomidor-history-mode-map
   (let ((map (make-keymap)))
