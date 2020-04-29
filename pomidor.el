@@ -182,6 +182,9 @@ To disable sounds, set to nil."
 (defvar pomidor-header-separator " — "
   "Pomidor string to separate time and duration in header.")
 
+(defvar pomidor--system-on-hold? nil
+  "Pomidor control of hold in system.")
+
 ;;; Private
 
 (defun pomidor--current-state ()
@@ -434,6 +437,8 @@ TIME may be nil."
     (define-key map (kbd "q") #'quit-window)
     (define-key map (kbd "Q") #'pomidor-quit)
     (define-key map (kbd "R") #'pomidor-reset)
+    (define-key map (kbd "h") #'pomidor-hold)
+    (define-key map (kbd "H") #'pomidor-unhold)
     (define-key map (kbd "RET") #'pomidor-stop)
     (define-key map (kbd "SPC") #'pomidor-break)
     (suppress-keymap map)
@@ -485,6 +490,22 @@ TIME may be nil."
   (let ((state (pomidor--current-state)))
     (plist-put state :stopped (current-time)))
   (nconc pomidor-global-state (list (pomidor--make-state))))
+
+(defun pomidor-hold ()
+  "Stop the current working pomidor and puts the system on hold."
+  (interactive)
+  (let ((state (pomidor--current-state)))
+    (plist-put state :stopped (current-time)))
+  (setq pomidor--system-on-hold? t)
+  (pomidor--cancel-timer))
+
+(defun pomidor-unhold ()
+  "Unhold and start a new pomidor."
+  (interactive)
+  (when pomidor--system-on-hold?
+    (nconc pomidor-global-state (list (pomidor--make-state)))
+    (setq pomidor--system-on-hold? nil)
+    (setq pomidor-timer (run-at-time nil 1 #'pomidor--update))))
 
 (define-derived-mode pomidor-mode special-mode "pomidor"
   "Major mode for Pomidor.
