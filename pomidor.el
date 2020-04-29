@@ -64,6 +64,10 @@
   "Time format for podomoro clock."
   :type 'string :group 'pomidor)
 
+(defcustom pomidor-history-date-format "%Y-%m-%dT%H:%M:%S"
+  "Date format used to save the session ended value."
+  :type 'string :group 'pomidor)
+
 (defcustom pomidor-duration-format "%H:%M:%S"
   "Time format for duration intervals."
   :type 'string :group 'pomidor)
@@ -298,7 +302,7 @@ To snooze the notification use `pomidor-break'."
 
 (defun pomidor--format-header (time state face)
   "Return formated header for TIME with FACE."
-  (let ((freezed-time (plist-get state :current-time)))
+  (let ((freezed-time (plist-get state :session-ended)))
     (concat (pomidor--with-face (concat (pomidor--format-time (or freezed-time (current-time)))
                                         pomidor-header-separator)
                                 'pomidor-time-face)
@@ -454,7 +458,7 @@ TIME may be nil."
     (cancel-timer pomidor-timer)
     (setq pomidor-timer nil)))
 
-(defun pomidor--read-session ()
+(defun pomidor--read-session (preserve-timestamp?)
   "Read the saved sessions."
   (let* ((data (with-temp-buffer
                  (insert-file-contents pomidor-save-session-file)
@@ -462,28 +466,22 @@ TIME may be nil."
                  (json-parse-buffer :object-type 'plist
                                     :array-type 'list
                                     :null-object nil)))
-         (data  (append data nil))
-         (ht (make-hash-table :test 'equal)))
-    (cl-loop
-     for entry in data
-     as snapshot-name = (plist-get entry :snapshot)
-     as pomidor = (plist-get entry :value)
-     do (puthash snapshot-name
-                 (cons pomidor (gethash snapshot-name ht)) ht))
-    ht))
-
+         (data  (append data nil)))
+    (if preserve-timestamp?
+        data
+      (-map (lambda (pomidor)
+              (-map (lambda (v) (if (stringp v)
+                               (parse-iso8601-time-string v)
+                             v))
+                    pomidor))
+            data))))
 
 (defun pomidor--valid-sessions-dates (session-dates direction)
   "Get valid date of SESSION-DATES from history data to move in correct DIRECTION."
   (let ((fun (lambda (v)
                (if (equalp direction :backward)
-                   (time-less-p
-                    (parse-iso8601-time-string v)
-                    (parse-iso8601-time-string pomidor--current-history-session))
-
-                 (time-less-p
-                  (parse-iso8601-time-string pomidor--current-history-session)
-                  (parse-iso8601-time-string v))))))
+                   (time-less-p v pomidor--current-history-session)
+                 (time-less-p pomidor--current-history-session v)))))
     (if pomidor--current-history-session
         (-filter (lambda (dt) (funcall fun dt)) session-dates)
       session-dates)))
@@ -553,36 +551,33 @@ TIME may be nil."
   (let ((time-asked-to-save (current-time)))
     (pomidor-quit)
     (plist-put (pomidor--current-state) :stopped time-asked-to-save)
-
-    (let* ((file-table (if (not (file-exists-p pomidor-save-session-file))
-                           (make-hash-table :test 'equal)
-                         (pomidor--read-session)))
-           (name  (format-time-string "%Y-%m-%dT%H:%M:%S" time-asked-to-save))
-           (global-state (-map (lambda (pomidor) (plist-put pomidor :current-time time-asked-to-save))
+    (let* ((fmt-time (lambda (time) (when time (format-time-string pomidor-history-date-format time))))
+           (history-state (if (file-exists-p pomidor-save-session-file)
+                              (pomidor--read-session :preserve-iso-timestamp)
+                            (list)))
+           (global-state (-map (lambda (pomidor)
+                                 (list :started (funcall fmt-time (plist-get pomidor :started))
+                                       :break (funcall fmt-time (plist-get pomidor :break))
+                                       :stopped (funcall fmt-time (plist-get pomidor :stopped))
+                                       :snooze (funcall fmt-time (plist-get pomidor :snooze))
+                                       :session-ended (funcall fmt-time time-asked-to-save)))
                                pomidor-global-state))
-           (global-state (-filter (lambda (pomidor) (or (plist-get pomidor :stopped)
-                                                    (plist-get pomidor :break)
-                                                    (plist-get pomidor :snooze)))
-                                  pomidor-global-state))
-           (counter 1))
-      (puthash name global-state file-table)
+           (new-history (append history-state global-state))
+           (new-history (-filter (lambda (pomidor) (or (plist-get pomidor :stopped)
+                                                  (plist-get pomidor :break)
+                                                  (plist-get pomidor :snooze)))
+                                 new-history)))
       (with-temp-file pomidor-save-session-file
-        (insert "[")
-        (cl-loop for k being
-               the hash-keys in file-table
-               using (hash-value v)
-               do (cl-loop for pomidor in v
-                           do (when (> counter 1) (insert ","))
-                           do (insert (json-encode-plist (list :snapshot k :value pomidor)))
-                           do (setq counter 2)))
-        (insert "]"))))
+        (insert (json-encode (vconcat new-history))))))
   (message "Pomidor session saved!"))
 
 (defun pomidor-history-previous ()
   "Move backward in your pomidor history."
   (interactive)
-  (let* ((session-table (pomidor--read-session))
-         (session-dates (hash-table-keys session-table)))
+  (let* ((session-data (pomidor--read-session nil))
+         (session-dates (-map (lambda (pomidor)
+                                (plist-get pomidor :session-ended))
+                              session-data)))
     (if (= (length session-dates) 0)
         (message "You have no session saved.")
       (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :backward)))
@@ -591,14 +586,19 @@ TIME may be nil."
               (setq pomidor--current-history-session (car (last valid-session-dates)))
               (pomidor--render
                (pomidor--get-history-buffer-create)
-               (gethash (car (last valid-session-dates)) session-table)))
+               (-filter (lambda (pomidor)
+                          (time-equal-p (car (last valid-session-dates))
+                                        (plist-get pomidor :session-ended)))
+                        session-data)))
           (message "History is over, go forward."))))))
 
 (defun pomidor-history-next ()
   "Move forward in your pomidor history."
   (interactive)
-  (let* ((session-table (pomidor--read-session))
-         (session-dates (hash-table-keys session-table)))
+  (let* ((session-data (pomidor--read-session nil))
+         (session-dates (-map (lambda (pomidor)
+                                (plist-get pomidor :session-ended))
+                              session-data)))
     (if (= (length session-dates) 0)
         (message "You have no sessions saved.")
       (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :forward)))
@@ -607,8 +607,12 @@ TIME may be nil."
               (setq pomidor--current-history-session (car valid-session-dates))
               (pomidor--render
                (pomidor--get-history-buffer-create)
-               (gethash (car valid-session-dates) session-table)))
+               (-filter (lambda (pomidor)
+                          (time-equal-p (car valid-session-dates)
+                                        (plist-get pomidor :session-ended)))
+                        session-data)))
           (message "History is over, go backward."))))))
+
 
 (defun pomidor-history ()
   "A simple pomodoro history feature. Compare your work over time."
