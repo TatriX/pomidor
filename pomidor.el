@@ -3,8 +3,8 @@
 ;; Author: TatriX <tatrics@gmail.com>
 ;; URL: https://github.com/TatriX/pomidor
 ;; Keywords: tools, time, applications, pomodoro technique
-;; Version: 0.3
-;; Package-Requires: ((emacs "24.3") (alert "1.2"))
+;; Version: 0.4
+;; Package-Requires: ((emacs "24.3") (alert "1.2") (dash . "2.17.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 
 (require 'cl-lib)
 (require 'alert)
+(require 'dash)
 
 ;;; Customs
 (defgroup pomidor nil
@@ -36,6 +37,10 @@
 
 (defcustom pomidor-buffer-name "*pomidor*"
   "Name of the pomidor buffer."
+  :type 'string :group 'pomidor)
+
+(defcustom pomidor-history-buffer-name "*pomidor-history*"
+  "Name of the pomidor history buffer."
   :type 'string :group 'pomidor)
 
 (defcustom pomidor-seconds (* 25 60)
@@ -57,6 +62,10 @@
 ;;; Vars
 (defcustom pomidor-time-format "%H:%M:%S"
   "Time format for podomoro clock."
+  :type 'string :group 'pomidor)
+
+(defcustom pomidor-history-date-format "%Y-%m-%dT%H:%M:%S"
+  "Date format used to save the session ended value."
   :type 'string :group 'pomidor)
 
 (defcustom pomidor-duration-format "%H:%M:%S"
@@ -83,6 +92,11 @@
 
 (defcustom pomidor-sound-break-over (expand-file-name (concat pomidor-dir "overwork.wav"))
   "Break over sound."
+  :type '(file :must-match t)
+  :group 'pomidor)
+
+(defcustom pomidor-save-session-file (expand-file-name "pomidor-session.json" user-emacs-directory)
+  "Pomidor session store file."
   :type '(file :must-match t)
   :group 'pomidor)
 
@@ -143,6 +157,11 @@ To disable sounds, set to nil."
   "pomidor face for time"
   :group 'pomidor)
 
+(defface pomidor-date-face
+  '(( t (:height 4.0)))
+  "pomidor face for date"
+  :group 'pomidor)
+
 (defface pomidor-timer-face
   '(( t (:height 5.0)))
   "pomidor face for timer"
@@ -181,6 +200,12 @@ To disable sounds, set to nil."
 
 (defvar pomidor-header-separator " — "
   "Pomidor string to separate time and duration in header.")
+
+(defvar pomidor-header-session-name-separator " : "
+  "Pomidor string to separate the regular header from the session name in history mode.")
+
+(defvar pomidor--current-history-session nil
+  "Hold the current visible pomidor history snapshot.")
 
 ;;; Private
 
@@ -275,24 +300,28 @@ To snooze the notification use `pomidor-break'."
   (let ((break (pomidor--break state)))
     (and break (time-subtract (pomidor--ended state) break))))
 
-(defun pomidor--format-header (time face)
+(defun pomidor--format-header (time state face)
   "Return formated header for TIME with FACE."
-  (concat (pomidor--with-face (concat (pomidor--format-time (current-time))
-                                      pomidor-header-separator)
-                              'pomidor-time-face)
-          (propertize (pomidor--format-duration time)
-                      'face `(:inherit (,face pomidor-timer-face)))))
+  (let ((freezed-time (plist-get state :session-ended)))
+    (concat (pomidor--with-face (concat (pomidor--format-time (or freezed-time (current-time)))
+                                        pomidor-header-separator)
+                                'pomidor-time-face)
+            (propertize (pomidor--format-duration time)
+                        'face `(:inherit (,face pomidor-timer-face)))
+            (when (eq major-mode 'pomidor-history-mode)
+              (pomidor--with-face (concat pomidor-header-session-name-separator
+                                          (format-time-string "%Y-%m-%d" freezed-time))
+                                  'pomidor-date-face)))))
 
-(defun pomidor--header ()
+(defun pomidor--header (state)
   "Return header."
-  (let* ((state (pomidor--current-state))
-         (break (pomidor--break-duration state))
+  (let* ((break (pomidor--break-duration state))
          (overwork (pomidor--overwork-duration state))
          (work (pomidor--work-duration state)))
     (cond
-     (break (pomidor--format-header break 'pomidor-break-face))
-     (overwork (pomidor--format-header overwork 'pomidor-overwork-face))
-     (work (pomidor--format-header work 'pomidor-work-face)))))
+     (break (pomidor--format-header break state 'pomidor-break-face))
+     (overwork (pomidor--format-header overwork state 'pomidor-overwork-face))
+     (work (pomidor--format-header work state 'pomidor-work-face)))))
 
 
 (defun pomidor--format-time (time)
@@ -346,7 +375,6 @@ TIME may be nil."
   (let* ((state (pomidor--current-state))
          (total (pomidor--total-duration state))
          (ellapsed (round (time-to-seconds total))))
-    (pomidor--tick-tack ellapsed)
     (when (zerop (mod ellapsed pomidor-update-interval))
       (when (functionp pomidor-alert)
         (funcall pomidor-alert))
@@ -356,76 +384,107 @@ TIME may be nil."
         (pomidor--play-sound-file pomidor-sound-overwork))
        ((pomidor-break-over-notify-p)
         (pomidor--play-sound-file pomidor-sound-break-over)))))
-  (pomidor--render))
+  (pomidor--render (pomidor--get-buffer-create) pomidor-global-state))
 
-(defun pomidor--render ()
+(defun pomidor--render (buffer states)
   "Render pomidor state."
-  (let ((buffer (pomidor--get-buffer-create)))
-    (when (get-buffer-window buffer t)
-      (with-current-buffer buffer
-        (read-only-mode -1)
-        (erase-buffer)
-        (insert (pomidor--header)
-                "\n")
-        (cl-loop
-         for i from 1
-         for state in pomidor-global-state
+  (when (get-buffer-window buffer t)
+    (with-current-buffer buffer
+      (read-only-mode -1)
+      (erase-buffer)
+      (insert (pomidor--header (car (last states)))
+              "\n")
+      (cl-loop
+       for i from 1
+       for state in states
 
-         as work = (pomidor--work-duration state)
-         as overwork = (pomidor--overwork-duration state)
-         as break = (pomidor--break-duration state)
-         as total = (pomidor--total-duration state)
+       as work = (pomidor--work-duration state)
+       as overwork = (pomidor--overwork-duration state)
+       as break = (pomidor--break-duration state)
+       as total = (pomidor--total-duration state)
 
-         with sum-work = (seconds-to-time 0)
-         with sum-overwork = (seconds-to-time 0)
-         with sum-break = (seconds-to-time 0)
-         with sum-total = (seconds-to-time 0)
+       with sum-work = (seconds-to-time 0)
+       with sum-overwork = (seconds-to-time 0)
+       with sum-break = (seconds-to-time 0)
+       with sum-total = (seconds-to-time 0)
 
-         do (progn
-              (setq sum-work (time-add sum-work work)
-                    sum-total (time-add sum-total total))
-              (when overwork
-                (setq sum-overwork (time-add sum-overwork overwork)))
-              (when break
-                (setq sum-break (time-add sum-break break)))
-              (insert
-               "\n     "
+       do (progn
+            (setq sum-work (time-add sum-work work)
+                  sum-total (time-add sum-total total))
+            (when overwork
+              (setq sum-overwork (time-add sum-overwork overwork)))
+            (when break
+              (setq sum-break (time-add sum-break break)))
+            (insert
+             "\n     "
+             (make-string 79 ?-)
+             "\n"
+             (format "%3d) [%s] | [%s] | [%s] | [%s]\t\t %s → %s"
+                     i
+                     (pomidor--with-face (pomidor--format-duration work) 'pomidor-work-face)
+                     (pomidor--with-face (pomidor--format-duration overwork) 'pomidor-overwork-face)
+                     (pomidor--with-face (pomidor--format-duration break) 'pomidor-break-face)
+                     (pomidor--format-duration total)
+                     (pomidor--format-time (pomidor--started state))
+                     (pomidor--format-time (pomidor--ended state)))
+             "\n     "
+             (pomidor--graph work overwork break)))
+       finally
+       (insert "\n     "
                (make-string 79 ?-)
-               "\n"
-               (format "%3d) [%s] | [%s] | [%s] | [%s]\t\t %s → %s"
-                       i
-                       (pomidor--with-face (pomidor--format-duration work) 'pomidor-work-face)
-                       (pomidor--with-face (pomidor--format-duration overwork) 'pomidor-overwork-face)
-                       (pomidor--with-face (pomidor--format-duration break) 'pomidor-break-face)
-                       (pomidor--format-duration total)
-                       (pomidor--format-time (pomidor--started state))
-                       (pomidor--format-time (pomidor--ended state)))
-               "\n     "
-               (pomidor--graph work overwork break)))
-         finally
-         (insert "\n     "
-                 (make-string 79 ?-)
-                 "\n\n"
-                 (format "     Work\t[%s]\n"
-                         (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face))
-                 (format "     Overwork\t[%s]\n"
-                         (pomidor--with-face (pomidor--format-duration sum-overwork) 'pomidor-overwork-face))
-                 (format "     Break\t[%s]\n"
-                         (pomidor--with-face (pomidor--format-duration sum-break) 'pomidor-break-face))
-                 (format "     Total\t[%s]\n"
-                         (pomidor--format-duration sum-total)))
-         )
-        (read-only-mode +1)))))
+               "\n\n"
+               (format "     Work\t[%s]\n"
+                       (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face))
+               (format "     Overwork\t[%s]\n"
+                       (pomidor--with-face (pomidor--format-duration sum-overwork) 'pomidor-overwork-face))
+               (format "     Break\t[%s]\n"
+                       (pomidor--with-face (pomidor--format-duration sum-break) 'pomidor-break-face))
+               (format "     Total\t[%s]\n"
+                       (pomidor--format-duration sum-total)))
+       )
+      (read-only-mode +1))))
 
 (defun pomidor--get-buffer-create ()
   "Return a pomidor buffer."
   (get-buffer-create pomidor-buffer-name))
+
+(defun pomidor--get-history-buffer-create ()
+  "Create a history pomidor buffer."
+  (get-buffer-create pomidor-history-buffer-name))
 
 (defun pomidor--cancel-timer ()
   "Cancel pomidor timer."
   (when (timerp pomidor-timer)
     (cancel-timer pomidor-timer)
     (setq pomidor-timer nil)))
+
+(defun pomidor--read-session (preserve-timestamp?)
+  "Read the saved sessions."
+  (let* ((data (with-temp-buffer
+                 (insert-file-contents pomidor-save-session-file)
+                 (goto-char (point-min))
+                 (json-parse-buffer :object-type 'plist
+                                    :array-type 'list
+                                    :null-object nil)))
+         (data  (append data nil)))
+    (if preserve-timestamp?
+        data
+      (-map (lambda (pomidor)
+              (-map (lambda (v) (if (stringp v)
+                               (parse-iso8601-time-string v)
+                             v))
+                    pomidor))
+            data))))
+
+(defun pomidor--valid-sessions-dates (session-dates direction)
+  "Get valid date of SESSION-DATES from history data to move in correct DIRECTION."
+  (let ((fun (lambda (v)
+               (if (equalp direction :backward)
+                   (time-less-p v pomidor--current-history-session)
+                 (time-less-p pomidor--current-history-session v)))))
+    (if pomidor--current-history-session
+        (-filter (lambda (dt) (funcall fun dt)) session-dates)
+      session-dates)))
 
 ;;; Public
 
@@ -485,6 +544,100 @@ TIME may be nil."
   (let ((state (pomidor--current-state)))
     (plist-put state :stopped (current-time)))
   (nconc pomidor-global-state (list (pomidor--make-state))))
+
+(defun pomidor-save-session ()
+  "Save the current session in a file."
+  (interactive)
+  (let ((time-asked-to-save (current-time)))
+    (pomidor-quit)
+    (plist-put (pomidor--current-state) :stopped time-asked-to-save)
+    (let* ((fmt-time (lambda (time) (when time (format-time-string pomidor-history-date-format time))))
+           (history-state (if (file-exists-p pomidor-save-session-file)
+                              (pomidor--read-session :preserve-iso-timestamp)
+                            (list)))
+           (global-state (-map (lambda (pomidor)
+                                 (list :started (funcall fmt-time (plist-get pomidor :started))
+                                       :break (funcall fmt-time (plist-get pomidor :break))
+                                       :stopped (funcall fmt-time (plist-get pomidor :stopped))
+                                       :snooze (funcall fmt-time (plist-get pomidor :snooze))
+                                       :session-ended (funcall fmt-time time-asked-to-save)))
+                               pomidor-global-state))
+           (new-history (append history-state global-state))
+           (new-history (-filter (lambda (pomidor) (or (plist-get pomidor :stopped)
+                                                  (plist-get pomidor :break)
+                                                  (plist-get pomidor :snooze)))
+                                 new-history)))
+      (with-temp-file pomidor-save-session-file
+        (insert (json-encode (vconcat new-history))))))
+  (message "Pomidor session saved!"))
+
+(defun pomidor-history-previous ()
+  "Move backward in your pomidor history."
+  (interactive)
+  (let* ((session-data (pomidor--read-session nil))
+         (session-dates (-map (lambda (pomidor)
+                                (plist-get pomidor :session-ended))
+                              session-data)))
+    (if (= (length session-dates) 0)
+        (message "You have no session saved.")
+      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :backward)))
+        (if valid-session-dates
+            (progn
+              (setq pomidor--current-history-session (car (last valid-session-dates)))
+              (pomidor--render
+               (pomidor--get-history-buffer-create)
+               (-filter (lambda (pomidor)
+                          (time-equal-p (car (last valid-session-dates))
+                                        (plist-get pomidor :session-ended)))
+                        session-data)))
+          (message "History is over, go forward."))))))
+
+(defun pomidor-history-next ()
+  "Move forward in your pomidor history."
+  (interactive)
+  (let* ((session-data (pomidor--read-session nil))
+         (session-dates (-map (lambda (pomidor)
+                                (plist-get pomidor :session-ended))
+                              session-data)))
+    (if (= (length session-dates) 0)
+        (message "You have no sessions saved.")
+      (let* ((valid-session-dates (pomidor--valid-sessions-dates session-dates :forward)))
+        (if valid-session-dates
+            (progn
+              (setq pomidor--current-history-session (car valid-session-dates))
+              (pomidor--render
+               (pomidor--get-history-buffer-create)
+               (-filter (lambda (pomidor)
+                          (time-equal-p (car valid-session-dates)
+                                        (plist-get pomidor :session-ended)))
+                        session-data)))
+          (message "History is over, go backward."))))))
+
+
+(defun pomidor-history ()
+  "A simple pomodoro history feature. Compare your work over time."
+  (interactive)
+  (if (not (file-exists-p pomidor-save-session-file))
+      (message "You should save at least one session first.")
+    (switch-to-buffer (pomidor--get-history-buffer-create))
+    (unless (eq major-mode 'pomidor-history-mode)
+      (pomidor-history-mode))
+    (pomidor-history-previous)))
+
+(defvar pomidor-history-mode-map
+  (let ((map (make-keymap)))
+    (define-key map (kbd "q") #'quit-window)
+    (define-key map (kbd "n") #'pomidor-history-next)
+    (define-key map (kbd "p") #'pomidor-history-previous)
+    (suppress-keymap map)
+    map))
+
+(define-derived-mode pomidor-history-mode special-mode "pomidor-history"
+  "Major mode for Pomidor History.
+
+\\{pomidor-history-mode-map}"
+  (setq pomidor-timer nil)
+  (setq pomidor--current-history-session nil))
 
 (define-derived-mode pomidor-mode special-mode "pomidor"
   "Major mode for Pomidor.
