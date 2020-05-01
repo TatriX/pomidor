@@ -68,7 +68,7 @@ progress through this methodology as time goes by.
 When you desire to save a session just do `M-x pomidor-save-session`,
 it will ask to close your pomidor and will save the current state to a
 file defined by `pomidor-save-session-file` defaults to
-`~/.emacs.d/pomidor-sessions.el`.
+`~/.emacs.d/pomidor-sessions.json`.
 
 The name of each session stored is the timestamp of the time you
 choose to save the session.
