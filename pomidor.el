@@ -684,8 +684,8 @@ TIME may be nil."
   "A simple and cool pomodoro technique timer."
   (interactive)
   (switch-to-buffer (pomidor--get-buffer-create))
-  (setq pomidor--count-short-breaks 0)
   (unless (eq major-mode 'pomidor-mode)
+    (setq pomidor--count-short-breaks 0)
     (pomidor-mode))
   (pomidor--update))
 
