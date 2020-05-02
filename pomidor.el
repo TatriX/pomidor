@@ -100,6 +100,14 @@
   :type '(file :must-match t)
   :group 'pomidor)
 
+(defcustom pomidor-breaks-before-long 4
+  "How many short breaks before the long break."
+  :type 'integer :group 'pomidor)
+
+(defcustom pomidor-long-break-seconds (* 20 60)
+  "Time length of a Podomoro long break."
+  :type 'integer :group 'pomidor)
+
 ;; libnotify for some reason can't display svg
 (defvar pomidor-icon (concat data-directory "images/icons/hicolor/16x16/apps/emacs.png")
   "Default pomidor icon.")
@@ -107,6 +115,9 @@
 (defun pomidor-default-alert-message ()
   "Default pomidor alert message if any."
   (cond
+   ((and (pomidor-overwork-p) (pomidor-should-long-break-p))
+    (format "Take a long break!\nOverwork: [%s]"
+            (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t)))
    ((pomidor-overwork-p)
     (format "Take a break!\nOverwork: [%s]"
             (format-time-string "%H:%M:%S" (pomidor-overwork-duration) t)))
@@ -207,6 +218,9 @@ To disable sounds, set to nil."
 (defvar pomidor--current-history-session nil
   "Hold the current visible pomidor history snapshot.")
 
+(defvar pomidor--count-short-breaks 0
+  "Pomidor integer of how many short breaks we have before a long break.")
+
 ;;; Private
 
 (defun pomidor--current-state ()
@@ -276,6 +290,10 @@ It's either stopped time or current time."
          (overwork (pomidor--overwork-duration state)))
     (and overwork (null (pomidor--break state)))))
 
+(defun pomidor-should-long-break-p ()
+  "Return t if current state should take a long break."
+  (equalp pomidor--count-short-breaks (1+ pomidor-breaks-before-long)))
+
 (defun pomidor-break-over-notify-p ()
   "Return t if current break is over and user should be notified about it.
 To snooze the notification use `pomidor-break'."
@@ -284,8 +302,11 @@ To snooze the notification use `pomidor-break'."
 (defun pomidor-break-over-p ()
   "Return t if current break is over."
   (let* ((state (pomidor--current-state))
-         (break (pomidor--break-duration state)))
-    (and break (> (time-to-seconds break) pomidor-break-seconds))))
+         (break (pomidor--break-duration state))
+         (expected-break-seconds (if (pomidor-should-long-break-p)
+                                     pomidor-long-break-seconds
+                                   pomidor-break-seconds)))
+    (and break (> (time-to-seconds break) expected-break-seconds))))
 
 (defun pomidor-snooze-p ()
   "Return t if user snooze end of break alarm."
@@ -520,6 +541,11 @@ TIME may be nil."
   (when (y-or-n-p "Are you sure you want to turn off pomidor? ")
     (kill-buffer (pomidor--get-buffer-create))))
 
+(defun pomidor--reset-long-break-counter ()
+  "Reset the pomidor counter after `pomidor-breaks-before-long' short breaks."
+  (when (pomidor-should-long-break-p)
+    (setq pomidor--count-short-breaks 0)))
+
 (defun pomidor-break ()
   "Break current working pomidor."
   (interactive)
@@ -529,13 +555,17 @@ TIME may be nil."
           (plist-put state :snooze t)
           (when (or (not pomidor-confirm-end-break)
                     (yes-or-no-p "Stop break and start new pomidor?"))
-            (pomidor-stop)))
-      (plist-put state :break (current-time)))))
+            (pomidor-stop))
+          (pomidor--reset-long-break-counter))
+      (progn
+        (plist-put state :break (current-time))
+        (setq pomidor--count-short-breaks (1+ pomidor--count-short-breaks))))))
 
 (defun pomidor-reset ()
   "Delete current global state."
   (interactive)
   (when (y-or-n-p "Are you sure you want reset pomidors? ")
+    (setq pomidor--count-short-breaks 0)
     (pomidor--reset)))
 
 (defun pomidor-stop ()
@@ -543,6 +573,7 @@ TIME may be nil."
   (interactive)
   (let ((state (pomidor--current-state)))
     (plist-put state :stopped (current-time)))
+  (pomidor--reset-long-break-counter)
   (nconc pomidor-global-state (list (pomidor--make-state))))
 
 (defun pomidor-save-session ()
@@ -653,6 +684,7 @@ TIME may be nil."
   "A simple and cool pomodoro technique timer."
   (interactive)
   (switch-to-buffer (pomidor--get-buffer-create))
+  (setq pomidor--count-short-breaks 0)
   (unless (eq major-mode 'pomidor-mode)
     (pomidor-mode))
   (pomidor--update))
