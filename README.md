@@ -60,6 +60,16 @@ should finish your break. To snooze it just press `Space` and select
 
 This cycle goes on forever.
 
+However, there are situations when you really cannot work in your next
+pomidor session for a time hiatus, and you also do not want to lose
+the track of what you already did.
+
+You can use `pomidor-hold` to put your current session on hold and
+when you want to get back to pomidor-land you use `pomidor-unhold`.
+The unhold function will create a new pomidor session and you can
+continue the virtuous cycle.
+
+
 ## History mode
 
 You can save your pomodoro sessions in a file and compare your
