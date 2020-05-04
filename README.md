@@ -64,10 +64,10 @@ However, there are situations when you really cannot work in your next
 pomidor session for a time hiatus, and you also do not want to lose
 the track of what you already did.
 
-You can use `pomidor-hold` to put your current session on hold and
-when you want to get back to pomidor-land you use `pomidor-unhold`.
-The unhold function will create a new pomidor session and you can
-continue the virtuous cycle.
+You can use `h` (`pomidor-hold`) to put your current session on hold
+and when you want to get back to pomidor-land you use `H`
+(`pomidor-unhold`). The unhold function will create a new pomidor
+session and you can continue the virtuous cycle.
 
 
 ## History mode
@@ -91,13 +91,16 @@ Check a demo of this feature at [here](https://youtu.be/BJTT7nILcsY).
 
 ## Keybindings
 
-| Key   | Description          |
-|-------|----------------------|
-| Enter | Start new pomodoro.  |
-| Space | Start a break.       |
-| R     | Resets the timer.    |
-| q     | Quit pomidor buffer. |
-| Q     | Turns off pomidor.   |
+| Key   | Description             |
+|-------|-------------------------|
+| Enter | Start new pomodoro.     |
+| Space | Start a break.          |
+| R     | Resets the timer.       |
+| q     | Quit pomidor buffer.    |
+| Q     | Turns off pomidor.      |
+| h     | Put the session on hold |
+| H     | Resume on hold session  |
+
 
 ## Customization
 
