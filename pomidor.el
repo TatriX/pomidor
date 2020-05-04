@@ -207,7 +207,7 @@ To disable sounds, set to nil."
 (defvar pomidor--current-history-session nil
   "Hold the current visible pomidor history snapshot.")
 
-(defvar pomidor--system-on-hold? nil
+(defvar pomidor--system-on-hold-p nil
   "Pomidor control of hold in system.")
 
 ;;; Private
@@ -555,15 +555,15 @@ TIME may be nil."
   (interactive)
   (let ((state (pomidor--current-state)))
     (plist-put state :stopped (current-time)))
-  (setq pomidor--system-on-hold? t)
+  (setq pomidor--system-on-hold-p t)
   (pomidor--cancel-timer))
 
 (defun pomidor-unhold ()
   "Unhold and start a new pomidor."
   (interactive)
-  (when pomidor--system-on-hold?
+  (when pomidor--system-on-hold-p
     (nconc pomidor-global-state (list (pomidor--make-state)))
-    (setq pomidor--system-on-hold? nil)
+    (setq pomidor--system-on-hold-p nil)
     (setq pomidor-timer (run-at-time nil 1 #'pomidor--update))))
 
 (defun pomidor-save-session ()
