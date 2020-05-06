@@ -60,6 +60,16 @@ should finish your break. To snooze it just press `Space` and select
 
 This cycle goes on forever.
 
+However, there are situations when you really cannot work in your next
+pomidor session for a time hiatus, and you also do not want to lose
+the track of what you already did.
+
+You can use `h` (`pomidor-hold`) to put your current session on hold
+and when you want to get back to pomidor-land you use `H`
+(`pomidor-unhold`). The unhold function will create a new pomidor
+session and you can continue the virtuous cycle.
+
+
 ## History mode
 
 You can save your pomodoro sessions in a file and compare your
@@ -68,7 +78,7 @@ progress through this methodology as time goes by.
 When you desire to save a session just do `M-x pomidor-save-session`,
 it will ask to close your pomidor and will save the current state to a
 file defined by `pomidor-save-session-file` defaults to
-`~/.emacs.d/pomidor-sessions.el`.
+`~/.emacs.d/pomidor-sessions.json`.
 
 The name of each session stored is the timestamp of the time you
 choose to save the session.
@@ -81,13 +91,16 @@ Check a demo of this feature at [here](https://youtu.be/BJTT7nILcsY).
 
 ## Keybindings
 
-| Key   | Description          |
-|-------|----------------------|
-| Enter | Start new pomodoro.  |
-| Space | Start a break.       |
-| R     | Resets the timer.    |
-| q     | Quit pomidor buffer. |
-| Q     | Turns off pomidor.   |
+| Key   | Description             |
+|-------|-------------------------|
+| Enter | Start new pomodoro.     |
+| Space | Start a break.          |
+| R     | Resets the timer.       |
+| q     | Quit pomidor buffer.    |
+| Q     | Turns off pomidor.      |
+| h     | Put the session on hold |
+| H     | Resume on hold session  |
+
 
 ## Customization
 
