@@ -113,6 +113,12 @@ To change timer duration:
 
 ```
 
+To change behavior of long breaks:
+``` elisp
+(setq pomidor-breaks-before-long 4) ; wait 4 short breaks before long break
+(setq pomidor-long-break-seconds (* 20 60)) ; 20 minutes long break time
+```
+
 To disable or configure sounds:
 ```elisp
 (setq pomidor-sound-tick nil
