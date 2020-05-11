@@ -134,12 +134,14 @@ To disable alerts, set to nil."
 (defun pomidor-play-sound-file-emacs (file)
   "Play FILE by starting new Emacs process."
   (if (fboundp 'play-sound-internal)
-      (start-process "pomidor-play-sound-file-emacs"
-                     nil
-                     (car command-line-args)
-                     "-Q"
-                     "--batch"
-                     "--eval" (format "(play-sound-file \"%s\")" file))
+      (progn
+	(unless (server-running-p "pomidor")
+	  (start-process "pomidor-daemon"
+			 nil
+			 (car command-line-args)
+			 "--bg-daemon=pomidor"
+			 "-Q"))
+	(server-eval-at "pomidor" `(run-with-idle-timer 0 nil #'play-sound-file ,file)))
     (warn "This Emacs binary lacks sound support")))
 
 (defcustom pomidor-play-sound-file #'pomidor-play-sound-file-emacs
@@ -675,8 +677,7 @@ TIME may be nil."
   (interactive)
   (switch-to-buffer (pomidor--get-buffer-create))
   (unless (eq major-mode 'pomidor-mode)
-    (pomidor-mode))
-  (pomidor--update))
+    (pomidor-mode)))
 
 
 (provide 'pomidor)
