@@ -1,3 +1,7 @@
+## v.06 06/05/2020
+Add pomidor long breaks after `pomidor-breaks-before-long` with
+`pomidor-long-break-seconds` amount of time.
+
 ## v.05 04/05/2020
 Add `pomidor-hold` and `pomidor-unhold` functions to keep a period of
 time without working on your pomidor sessions and resume when needed.
