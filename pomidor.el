@@ -295,7 +295,7 @@ It's either stopped time or current time."
 
 (defun pomidor-should-long-break-p ()
   "Return t if current state should take a long break."
-  (equalp pomidor--count-short-breaks (1+ pomidor-breaks-before-long)))
+  (cl-equalp pomidor--count-short-breaks (1+ pomidor-breaks-before-long)))
 
 (defun pomidor-break-over-notify-p ()
   "Return t if current break is over and user should be notified about it.
@@ -503,7 +503,7 @@ TIME may be nil."
 (defun pomidor--valid-sessions-dates (session-dates direction)
   "Get valid date of SESSION-DATES from history data to move in correct DIRECTION."
   (let ((fun (lambda (v)
-               (if (equalp direction :backward)
+               (if (cl-equalp direction :backward)
                    (time-less-p v pomidor--current-history-session)
                  (time-less-p pomidor--current-history-session v)))))
     (if pomidor--current-history-session
