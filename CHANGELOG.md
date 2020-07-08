@@ -1,3 +1,8 @@
+## Unreleased
+
+Return tick-tack sounds back. They were removed when adding
+`pomidor-history-mode`.
+
 ## v.06 06/05/2020
 Add pomidor long breaks after `pomidor-breaks-before-long` with
 `pomidor-long-break-seconds` amount of time.
