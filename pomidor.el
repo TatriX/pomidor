@@ -485,13 +485,9 @@ TIME may be nil."
 
 (defun pomidor--read-session (preserve-timestamp?)
   "Read the saved sessions."
-  (let* ((data (with-temp-buffer
-                 (insert-file-contents pomidor-save-session-file)
-                 (goto-char (point-min))
-                 (json-parse-buffer :object-type 'plist
-                                    :array-type 'list
-                                    :null-object nil)))
-         (data  (append data nil)))
+  (let* ((json-object-type 'plist)
+         (json-array-type 'list)
+         (data (json-read-file pomidor-save-session-file)))
     (if preserve-timestamp?
         data
       (-map (lambda (pomidor)
