@@ -399,6 +399,7 @@ TIME may be nil."
   (let* ((state (pomidor--current-state))
          (total (pomidor--total-duration state))
          (ellapsed (round (time-to-seconds total))))
+    (pomidor--tick-tack ellapsed)
     (when (zerop (mod ellapsed pomidor-update-interval))
       (when (functionp pomidor-alert)
         (funcall pomidor-alert))
