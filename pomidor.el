@@ -29,6 +29,7 @@
 (require 'cl-lib)
 (require 'alert)
 (require 'dash)
+(require 'json)
 
 ;;; Customs
 (defgroup pomidor nil
