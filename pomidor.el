@@ -609,7 +609,7 @@ TIME may be nil."
                                  (list :started (funcall fmt-time (plist-get pomidor :started))
                                        :break (funcall fmt-time (plist-get pomidor :break))
                                        :stopped (funcall fmt-time (plist-get pomidor :stopped))
-                                       :snooze (funcall fmt-time (plist-get pomidor :snooze))
+                                       :snooze (plist-get pomidor :snooze)
                                        :session-ended (funcall fmt-time time-asked-to-save)))
                                pomidor-global-state))
            (new-history (append history-state global-state))
