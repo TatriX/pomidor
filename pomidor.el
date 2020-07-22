@@ -637,8 +637,8 @@ TIME may be nil."
               (pomidor--render
                (pomidor--get-history-buffer-create)
                (-filter (lambda (pomidor)
-                          (time-equal-p (car (last valid-session-dates))
-                                        (plist-get pomidor :session-ended)))
+                          (equal (car (last valid-session-dates))
+                                 (plist-get pomidor :session-ended)))
                         session-data)))
           (message "History is over, go forward."))))))
 
@@ -658,8 +658,8 @@ TIME may be nil."
               (pomidor--render
                (pomidor--get-history-buffer-create)
                (-filter (lambda (pomidor)
-                          (time-equal-p (car valid-session-dates)
-                                        (plist-get pomidor :session-ended)))
+                          (equal (car valid-session-dates)
+                                 (plist-get pomidor :session-ended)))
                         session-data)))
           (message "History is over, go backward."))))))
 
