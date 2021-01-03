@@ -121,8 +121,8 @@ To change behavior of long breaks:
 
 To disable or configure sounds:
 ```elisp
-(setq pomidor-sound-tick nil
-      pomidor-sound-tack nil
+(setq pomidor-sound-tick nil ; nil to disable, defaults to `(expand-file-name (concat pomidor-dir "tick.wav"))`
+      pomidor-sound-tack nil ; 
       pomidor-sound-overwork (expand-file-name (concat pomidor-dir "overwork.wav"))
 	  pomidor-sound-break-over (expand-file-name (concat (getenv "HOME") "/Music/overwork.wav")))
 ```
