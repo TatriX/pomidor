@@ -30,6 +30,7 @@
 (require 'alert)
 (require 'dash)
 (require 'json)
+(require 'parse-time)
 
 ;;; Customs
 (defgroup pomidor nil
