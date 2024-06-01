@@ -369,10 +369,13 @@ TIME may be nil."
 
 (defun pomidor--format-time-string (time face)
   "Format graph string for TIME with FACE."
-  (pomidor--with-face (make-string (round (/ (time-to-seconds time)
-                                     (/ (float pomidor-seconds) (/ (pomidor--window-width) 2))))
-                                   pomidor-graph-char)
-                      face))
+  (pomidor--with-face
+   (make-string (round (/ (time-to-seconds time)
+                          (/ (+ (float pomidor-seconds)
+                                (float pomidor-long-break-seconds))
+                             (- (pomidor--window-width) 12))))
+                pomidor-graph-char)
+   face))
 
 (defun pomidor--graph (work overwork break)
   "Format graph based on WORK, OVERWORK and BREAK time."
@@ -444,21 +447,46 @@ TIME may be nil."
               (setq sum-break (time-add sum-break break)))
             (insert
              "\n     "
-             (make-string 79 ?-)
+             (make-string (- (pomidor--window-width) 12) ?-)
              "\n"
-             (format "%3d) [%s] | [%s] | [%s] | [%s]\t\t %s → %s"
-                     i
-                     (pomidor--with-face (pomidor--format-duration work) 'pomidor-work-face)
-                     (pomidor--with-face (pomidor--format-duration overwork) 'pomidor-overwork-face)
-                     (pomidor--with-face (pomidor--format-duration break) 'pomidor-break-face)
-                     (pomidor--format-duration total)
-                     (pomidor--format-time (pomidor--started state))
-                     (pomidor--format-time (pomidor--ended state)))
+             ;; We have to store the pre-formatted values here to
+             ;; calculate how much space they take up.  This is due to
+             ;; the variable time format, see `pomidor-time-format'.
+             (let ((formatted-time-work
+                    (pomidor--with-face (pomidor--format-duration work) 'pomidor-work-face))
+                   (formatted-time-overwork
+                    (pomidor--with-face (pomidor--format-duration overwork) 'pomidor-overwork-face))
+                   (formatted-time-break
+                    (pomidor--with-face (pomidor--format-duration break) 'pomidor-break-face))
+                   (formatted-time-total (pomidor--format-duration total))
+                   (formatted-time-start (pomidor--format-time (pomidor--started state)))
+                   (formatted-time-end (pomidor--format-time (pomidor--ended state))))
+               (format "%3d) [%s] | [%s] | [%s] | [%s]%s%s → %s"
+                       i
+                       formatted-time-work
+                       formatted-time-overwork
+                       formatted-time-break
+                       formatted-time-total
+                       (make-string (max (- (pomidor--window-width)
+                                            12 ; margin
+                                            9  ; | separators
+                                            3  ; → separator
+                                            8  ; brackets
+                                            (length formatted-time-work)
+                                            (length formatted-time-overwork)
+                                            (length formatted-time-break)
+                                            (length formatted-time-total)
+                                            (length formatted-time-start)
+                                            (length formatted-time-end))
+                                         1)
+                                    32)
+                       formatted-time-start
+                       formatted-time-end))
              "\n     "
              (pomidor--graph work overwork break)))
        finally
        (insert "\n     "
-               (make-string 79 ?-)
+               (make-string (- (pomidor--window-width) 12) ?-)
                "\n\n"
                (format "     Work\t[%s]\n"
                        (pomidor--with-face (pomidor--format-duration sum-work) 'pomidor-work-face))
