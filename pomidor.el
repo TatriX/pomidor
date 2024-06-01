@@ -166,37 +166,37 @@ To disable sounds, set to nil."
 
 ;;; Faces
 (defface pomidor-time-face
-  '(( t (:height 4.0)))
+  '((t (:height 4.0)))
   "pomidor face for time"
   :group 'pomidor)
 
 (defface pomidor-date-face
-  '(( t (:height 4.0)))
+  '((t (:height 4.0)))
   "pomidor face for date"
   :group 'pomidor)
 
 (defface pomidor-timer-face
-  '(( t (:height 5.0)))
+  '((t (:height 5.0)))
   "pomidor face for timer"
   :group 'pomidor)
 
 (defface pomidor-work-face
-  '((t (:inherit 'success)))
+  '((t (:inherit success)))
   "pomidor face for work"
   :group 'pomidor)
 
 (defface pomidor-overwork-face
-  '((t (:inherit 'warning)))
+  '((t (:inherit warning)))
   "pomidor face for overwork"
   :group 'pomidor)
 
 (defface pomidor-break-face
-  '((t (:inherit 'font-lock-keyword-face)))
+  '((t (:inherit font-lock-keyword-face)))
   "pomidor face for break"
   :group 'pomidor)
 
 (defface pomidor-skip-face
-  '(( t (:inherit 'font-lock-comment-face)))
+  '((t (:inherit font-lock-comment-face)))
   "pomidor face for skip"
   :group 'pomidor)
 
